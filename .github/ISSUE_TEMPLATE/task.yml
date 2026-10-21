@@ -1,0 +1,38 @@
+name: Task
+description: A small, shippable unit of work (one PR, roughly 1–2h)
+labels: ["status:ready"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this exists. Link the relevant SPEC section.
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable, testable outcomes.
+      value: |
+        - [ ]
+        - [ ] Tests cover the happy path and one error case
+    validations:
+      required: true
+  - type: input
+    id: files
+    attributes:
+      label: Files likely touched
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      placeholder: "#12, or none"

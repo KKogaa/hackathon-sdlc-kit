@@ -1,0 +1,23 @@
+name: Bug
+description: Something is broken
+labels: ["type:bug", "status:ready"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened vs. expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: dropdown
+    id: demo
+    attributes:
+      label: Does it break the demo path?
+      options: ["Yes (p0)", "No"]
+    validations:
+      required: true

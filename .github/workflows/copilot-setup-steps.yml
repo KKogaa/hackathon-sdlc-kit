@@ -1,0 +1,26 @@
+# Prepares the environment for the GitHub Copilot coding agent before it starts work on an issue.
+# The job MUST be named `copilot-setup-steps`. Extend it once the stack is chosen.
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+  pull_request:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v6
+      - name: Install dependencies if present
+        run: |
+          if [ -f package-lock.json ]; then npm ci; fi
+          if [ -f pyproject.toml ]; then uv sync; fi

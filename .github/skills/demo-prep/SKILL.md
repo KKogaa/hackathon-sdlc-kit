@@ -1,0 +1,32 @@
+---
+name: demo-prep
+description: Prepare the hackathon submission: a polished README, demo script, pitch outline, architecture diagram, and seed data. Use when the user mentions demo, pitch, presentation, submission, Devpost, or judging.
+---
+
+# Demo and submission prep
+
+## Steps
+
+1. **README.md** at the repo root (judges read it first):
+   - Name and a one-line pitch
+   - Screenshot or GIF at the top
+   - Problem → solution (3 sentences)
+   - Features (what actually works, and honestly so)
+   - Architecture: a mermaid diagram from `docs/SPEC.md`
+   - Tech stack, with any sponsor tech called out
+   - Run locally in at most 3 commands
+   - Team members
+   - How it was built: mention the agentic workflow (Copilot agents plus skills), since judges like this
+
+2. **`docs/DEMO.md`**: a 2–3 minute script:
+   - Hook (15s): the problem, made relatable
+   - Live demo (90s): the exact clicks and inputs, using deterministic seed data
+   - How it works (30s): the architecture
+   - What's next (15s)
+   - **Backup plan**: link a pre-recorded video, and add a note in case the Wi-Fi or API dies
+
+3. **Seed data**: make sure there's a script or fixture that puts the app into a demo-ready state in one command. Add it to `AGENTS.md`.
+
+4. **Demo-path audit**: walk the demo flow in the code and list anything that could fail live. Examples: rate limits, cold starts, missing error states, hardcoded localhost. Open `priority:p0` issues for each one.
+
+5. Open a PR with all of the above using the `open-pr` skill.

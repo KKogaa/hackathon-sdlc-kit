@@ -1,0 +1,29 @@
+---
+name: write-tests
+description: Write fast, focused tests for new or changed code using the project's existing test framework. Use when the user asks for tests, when implementing an issue, or when coverage is missing for a change.
+---
+
+# Write tests
+
+Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim for confidence that the main flows don't break when five people merge at once.
+
+## Steps
+
+1. Detect the framework from the repo. Don't add a new one if one already exists:
+   - JS/TS: `vitest` or `jest` in `package.json`
+   - Python: `pytest`
+   - Other: check `AGENTS.md`
+   - None yet: add the stack's default (vitest for TS, pytest for Python) and a `test` script.
+2. Put tests next to the existing tests and match their naming and style.
+3. For each change, cover:
+   - **Happy path**: the acceptance criteria from the issue
+   - **One meaningful failure**: bad input, missing auth, or an empty state
+   - **Contract shape**: API responses match `docs/SPEC.md`
+4. Mock external services (LLM APIs, third-party HTTP, payments). Tests must run offline and finish in seconds.
+5. Run the suite and make sure it passes. Never weaken or skip an existing test to get green. Fix the code, or flag the test as wrong in the PR.
+
+## Don'ts
+
+- No snapshot tests of large UI trees. They churn constantly.
+- No sleeps or real network calls.
+- No tests of framework or library behavior.
