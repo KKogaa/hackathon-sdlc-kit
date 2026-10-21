@@ -11,8 +11,21 @@ concurrency:
 
 # Stack-agnostic: runs whichever toolchains it detects. Tighten this once the stack is chosen.
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.d.outputs.node }}
+      python: ${{ steps.d.outputs.python }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: d
+        run: |
+          echo "node=$([ -f package.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "python=$([ -f pyproject.toml ] || [ -f requirements.txt ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   node:
-    if: ${{ hashFiles('**/package.json') != '' }}
+    needs: detect
+    if: needs.detect.outputs.node == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,11 +39,12 @@ jobs:
       - run: npm run build --if-present
 
   python:
-    if: ${{ hashFiles('**/pyproject.toml', '**/requirements.txt') != '' }}
+    needs: detect
+    if: needs.detect.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync || uv pip install --system -r requirements.txt
+      - run: if [ -f pyproject.toml ]; then uv sync; else uv venv && uv pip install -r requirements.txt; fi
       - run: uvx ruff check .
       - run: uv run pytest -q
