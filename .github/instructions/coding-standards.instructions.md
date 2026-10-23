@@ -30,7 +30,6 @@ Stack-specific standards load next to this file: `typescript`, `react` and `fast
 
 ## Security
 
-- No secrets in code, tests, fixtures, logs or PR bodies. Config comes from env vars, listed in `.env.example`.
 - Never build SQL, shell commands or HTML by concatenating input. Use parameters, argument arrays and the framework's escaping.
 - Don't log personal data, tokens or full request bodies.
 

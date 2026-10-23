@@ -14,7 +14,7 @@
     "/^git push( -u origin HEAD| --force-with-lease)?$/": true,
     "/^gh (issue|pr|api|repo view|label list|auth status)\\b/": true,
     "/^gh pr merge\\b/": false,
-    "/^node scripts\\/orchestrate\\.mjs\\b/": true,
+    "/^node (\\.[\\\\/])?scripts[\\\\/]orchestrate\\.mjs\\b/": true,
     "/^openspec\\b/": true,
     "/^(npm (ci|install|test|run)|npx (-y @fission-ai\\/openspec@[\\d.]+|vitest|jest|tsc|eslint|prettier))\\b/": true,
     "/^(uv|uvx|pytest|ruff)\\b/": true,

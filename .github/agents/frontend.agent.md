@@ -9,13 +9,11 @@ You've been handed **one unit of work** by a worker agent, as a subagent with a 
 
 1. Load the `role-frontend` skill. It's how you work, design included: it points you to the `frontend-design` skill for the aesthetic direction.
 2. Do the unit:
-   - `implement`: follow the `implement-issue` skill from step 2 (branch). The issue is already assigned to your worker.
+   - `implement`: follow the `implement-issue` skill from step 2.
    - `fix`: follow the `fix-pr` skill.
-3. Your PR body includes `<!-- worker:<worker id> -->` (`open-pr` explains why).
+3. **Stay visibly alive.** `start`, `check` and `pr` report your progress to the orchestrator on their own, and so does each commit you push. If you've gone about 15 minutes without any of them, run `node scripts/orchestrate.mjs beat <what you're doing>`. If `beat` exits with code 3, the orchestrator gave your unit to someone else: stop and return `FAILED released`.
 4. **Don't run `orchestrate.mjs work` or `done`.** Your worker does that after you return.
 5. Finish with **one line** as your final message, one of:
    - `DONE <PR url>`
-   - `PARKED #<issue> needs a decision: <question>`, after parking it as the `worker` agent's rules describe
-   - `FAILED <reason>`, if you couldn't finish: say what's left, and leave your work committed on the branch
-
-Follow the same rules as every worker. Windows shell: one plain command at a time, and `"@me"` quoted. Implement only the task group the issue names. The Contracts in `design.md` are law. The `check` skill must pass.
+   - `PARKED #<issue> needs a decision: <question>`, after `orchestrate.mjs park`
+   - `FAILED <reason>`, if you couldn't finish: comment the reason on the issue or PR first, and leave your work committed and pushed on the branch

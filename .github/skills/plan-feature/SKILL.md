@@ -7,7 +7,6 @@ description: Add a feature or change scope mid-hackathon, interactively with the
 
 The workers keep building while you plan. Your job is to turn the human's idea into issue-ready work that **fits around what's already in flight**, with as little of their time as possible. Never create feature issues by hand: the orchestrator creates them from the merged `tasks.md`.
 
-Run one command at a time.
 
 ## 1. Understand: ask once
 
@@ -32,8 +31,8 @@ node scripts/orchestrate.mjs status
 ## 3. Plan it on a branch
 
 ```
-git fetch origin
-git checkout -b spec-<change-name> origin/main
+node scripts/orchestrate.mjs start
+git checkout -b spec-<change-name>
 ```
 Create the change with the `openspec-propose` skill (`/opsx-propose` in VS Code), following the `rules:` in `openspec/config.yaml`:
 - frontend groups (`area=frontend`, which own design too) and backend groups. If the feature needs new design-system pieces, put them in the first frontend group and make the screens depend on it
@@ -62,16 +61,13 @@ Use the `open-pr` skill with the title `docs(spec): plan <change-name>` and **no
 ```
 gh pr edit <PR> --add-label pr:needs-review
 ```
-The orchestrator assigns it to a worker on another account. That worker validates and merges it (see `review-pr`, "Spec PRs"), and the next tick turns it into issues. Finish by leaving the folder clean:
-```
-git checkout --detach origin/main
-```
+The orchestrator assigns it to a worker on another account. That worker validates and merges it (see `review-pr`, "Spec PRs"), and the next tick turns it into issues. Finish by leaving the folder clean: `node scripts/orchestrate.mjs start`.
 
 Report: the PR link, and *"N issues will appear within a minute of the merge."*
 
 ## Not a feature?
 
-A bug, or a tweak that changes no requirement, needs no OpenSpec change. Create the issue directly, with its lane:
+A bug, or a tweak that changes no requirement, needs no OpenSpec change. Write what's wrong, how to reproduce it and what's expected to `.orchestrate/bug.md`, then create the issue directly, with its lane:
 ```
-gh issue create --title "fix: <summary>" --label "type:bug,status:ready,priority:<p>,area:<lane>" --body "<what's wrong, how to reproduce, what's expected>"
+gh issue create --title "fix: <summary>" --label "type:bug,status:ready,priority:<p>,area:<lane>" --body-file .orchestrate/bug.md
 ```

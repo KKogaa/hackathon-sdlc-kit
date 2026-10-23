@@ -1,0 +1,10 @@
+{
+  // GitHub's remote MCP server, used by the agents for issues, PRs, comments and labels (AGENTS.md, Rules).
+  // VS Code signs it in with your GitHub account the first time it starts. Use the same account as gh.
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  }
+}

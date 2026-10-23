@@ -20,7 +20,7 @@ Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim
    - **One meaningful failure**: bad input, missing auth, or an empty state
    - **Contract shape**: API responses match the `## Contracts` in the change's `design.md`
 4. Mock external services (LLM APIs, third-party HTTP, payments). Tests must run offline and finish in seconds.
-5. Run the `check` skill and make sure it passes. Never weaken or skip an existing test to get green. Fix the code, or flag the test as wrong in the PR.
+5. Run `node scripts/orchestrate.mjs check` and make sure it passes, without weakening or skipping an existing test (the `check` skill's rules).
 
 ## Don'ts
 

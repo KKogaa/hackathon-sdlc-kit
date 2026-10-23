@@ -13,12 +13,10 @@ A human asking for a specific issue outside the loop (*"implement #N"*) is fine 
 
 ## 2. Branch
 
-Several workers can share a machine (git worktrees), and only one of them can have `main` checked out, so always branch from `origin/main`. Run one command at a time:
 ```
-git fetch origin
-git checkout -b <N>-<short-slug> origin/main
+node scripts/orchestrate.mjs start <N>
 ```
-If a branch for this issue already exists on `origin` (`git branch -r --list "origin/<N>-*"`), a previous worker started it: check that branch out instead, and continue from where it stopped.
+It prints the branch name. A new branch `<N>-<slug>` is made from main and pushed right away. If anyone already started this issue (here, in the team's repo, or in a teammate's fork), `start` continues their branch instead: read its commits and carry on from where they stopped.
 
 ## 3. Understand
 
@@ -30,17 +28,19 @@ If a branch for this issue already exists on `origin` (`git branch -r --list "or
 
 ## 4. Implement
 
-- Follow the `openspec-apply-change` skill for change `<id>`, **but only for task group `<n>`**. Other groups belong to other people or agents.
-- Make the smallest change that satisfies the tasks and scenarios. No drive-by refactors.
-- Respect the Contracts. If a contract must change, update the change's `design.md` and spec deltas in the same PR, and call it out.
+- Follow the `openspec-apply-change` skill for change `<id>`, **but only for task group `<n>`**.
+- Make the smallest change that satisfies the tasks and scenarios. If a contract must change, update the change's `design.md` and spec deltas in the same PR, and call it out.
 - Write or update tests using the `write-tests` skill.
 - Tick the group's boxes in `openspec/changes/<id>/tasks.md` (`- [x]`) as you finish them.
-- Commit in small steps with Conventional Commits that reference the issue:
-  `feat(api): add create-item endpoint (#<N>)`
+- Commit in small steps, with Conventional Commits that reference the issue (`feat(api): add create-item endpoint (#<N>)`), and **`git push` after each commit**.
 
-## 5. Verify locally
+## 5. Verify
 
-Run the `check` skill: OpenSpec validation plus lint, test and build. It is the team's CI, since there are no GitHub Actions. Don't open the PR until it passes.
+```
+node scripts/orchestrate.mjs rebase
+node scripts/orchestrate.mjs check
+```
+`rebase` brings the branch up to date with main. If it stops on conflicts, resolve them as it says. Then `check` must pass (see the `check` skill). Commit anything it shows as uncommitted, and run it again.
 
 ## 6. Ship
 
@@ -48,8 +48,9 @@ Use the `open-pr` skill.
 
 ## If blocked
 
-Comment on the issue explaining the blocker, then swap the labels and release it. Add the blocking issue as `#M` under the issue's `## Depends on` heading (`gh issue edit <N> --body-file …`), so the orchestrator moves it back to ready automatically when `#M` closes. If the blocker is a decision rather than an issue, use `status:needs-decision` instead, as the worker agent's rules describe.
-```
-gh issue comment <N> --body "Blocked: <reason>. Needs #<M>."
-gh issue edit <N> --add-label "status:blocked" --remove-label "status:in-progress" --remove-assignee "@me"
-```
+- **By a decision** (an ambiguous requirement, a missing secret, a product choice): park it, as `AGENTS.md` says, and return `PARKED`.
+- **By another issue `#M`:** comment it (write `Blocked: <reason>. Needs #<M>.` to `.orchestrate/blocked-<N>.md`), add `#M` under the issue's `## Depends on` heading (`gh issue edit <N> --body-file .orchestrate/issue-<N>.md`), and swap the labels. The orchestrator moves it back to ready when `#M` closes.
+  ```
+  gh issue comment <N> --body-file .orchestrate/blocked-<N>.md
+  gh issue edit <N> --add-label "status:blocked" --remove-label "status:in-progress" --remove-assignee "@me"
+  ```

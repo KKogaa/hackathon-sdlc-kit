@@ -28,15 +28,26 @@ git push
 
 ## 2. Add the team
 
-*Settings → Collaborators* → add every teammate with **Write** access. Each worker acts as its teammate's account, so every account needs write access.
+*Settings → Collaborators* → add every teammate with **Write** access. Each worker acts as its teammate's account, so every account needs write access: workers label issues, and approve and merge each other's PRs.
 
-## 3. Labels and the worker registry
+Teammates other than you work from **forks** of the repo ([worker.md](worker.md#1-get-the-repo)), so their branches don't pile up in it. For a private repo, turn on *Settings → General → Allow forking* (in an organization, the organization must allow forking private repositories too). You don't need a fork: your own sessions, however many, work in the repo itself.
 
-In the repo folder:
+## 3. Labels, the worker registry and the project board
+
+Do this on the account that will run the orchestrator (normally the conductor's). The board is a GitHub Project, so that account needs the `project` scope once:
+```
+gh auth refresh -s project
+```
+Then, in the repo folder:
 ```
 node scripts/orchestrate.mjs setup
 ```
-This creates the labels and the **Worker registry** issue, where workers register and the orchestrator posts assignments. It's safe to re-run. Don't close or edit that issue.
+It's safe to re-run. It creates:
+- the labels
+- the **Worker registry** issue, where workers register and the orchestrator posts assignments. Don't close or edit it.
+- the **project board** `<repo> board`, linked to the repo, with a **Stage** field: Requested, Blocked, Ready, In progress, In review, Needs a human, Done. To use a project you already have, run `setup --project <number>` instead. Open the board (the link is in the registry issue and in `orchestrate.mjs status`), and in its board view set **Group by: Stage**, once.
+
+Every issue lands on the board, whoever created it, and its card moves on its own as the work goes. **The board is a view:** dragging a card changes nothing, and the orchestrator moves it back on the next change. To change work, tell the orchestrator, or change labels. Only the orchestrator's account needs the `project` scope; workers never touch the board.
 
 ## 4. Protect `main`
 

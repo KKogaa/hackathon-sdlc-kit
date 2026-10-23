@@ -8,17 +8,18 @@ description: Generate a quick team status report from GitHub: what's merged, in 
 ## Gather the data
 
 ```
-gh pr list --state merged --limit 50 --json number,title,author,mergedAt   # keep the ones merged in the last 3 hours
+gh pr list --state merged --limit 50 --json number,title,author,mergedAt
 gh pr list --state open --json number,title,author,reviewDecision,statusCheckRollup,isDraft
 gh issue list --label "status:in-progress" --json number,title,assignees,updatedAt
 gh issue list --label "status:blocked" --json number,title,assignees
 gh issue list --label "status:ready" --json number,title,labels
 gh issue list --label "status:needs-decision" --json number,title
 gh pr list --state open --label "pr:changes" --json number,title,author
-node scripts/orchestrate.mjs status        # board + per-change progress
-openspec list --json                        # task progress per OpenSpec change
-gh api "repos/{owner}/{repo}/milestones" --jq '.[] | {title, open_issues, closed_issues, due_on}'
+node scripts/orchestrate.mjs status
+openspec list --json
+gh api "repos/{owner}/{repo}/milestones" --jq ".[] | {title, open_issues, closed_issues, due_on}"
 ```
+Of the merged PRs, keep the ones merged in the last 3 hours. `status` gives the board and per-change progress, and `openspec list` the task progress per OpenSpec change.
 
 ## Report format
 

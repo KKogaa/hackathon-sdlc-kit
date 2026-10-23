@@ -30,15 +30,14 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
      - the ideas not taken go in the brief's **Later** list, where `/plan` can pick them up if the team gets ahead.
    - Size it to the team: about 6 workers × the hours until the feature freeze. Must-haves should fit comfortably in roughly the first half of that. If the approved list doesn't fit, say so and suggest what to drop.
 
-2. **Check the tools**: `openspec --version`, or install it with `npm install -g @fission-ai/openspec@1.14.3`, and `gh auth status`. Create the labels with `node scripts/orchestrate.mjs setup` (safe to re-run). Create the milestone:
+2. **Check the tools**: `openspec --version`, or install it with `npm install -g @fission-ai/openspec@1.14.3`, and `gh auth status`. Create the labels, the worker registry and the project board with `node scripts/orchestrate.mjs setup` (safe to re-run). The board needs the `project` scope on this account: if `setup` says so, run `gh auth refresh -s project` and `setup` again. Create the milestone:
    ```
    gh api "repos/{owner}/{repo}/milestones" -f title="MVP" -f due_on="<ISO deadline>"
    ```
 
-3. **Branch**, one command at a time:
+3. **Branch:**
    ```
-   git checkout main
-   git pull --ff-only
+   node scripts/orchestrate.mjs start
    git checkout -b kickoff-spec
    ```
 
@@ -59,7 +58,7 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    - the tech stack, with sponsor tech called out
    - **Project structure**: the top-level folders with one line each, and a link to the lane ownership in `AGENTS.md#project-structure` (don't copy the full map, it would drift)
    - **Getting started**: point to the Install and Dev rows of the Commands table in `AGENTS.md`, which `scaffold` fills in
-   - **How we work**: links to `docs/playbook.md` and `docs/setup/README.md`
+   - **How we work**: the project board's link (in `orchestrate.mjs status`), and links to `docs/playbook.md` and `docs/setup/README.md`
 
    `demo-prep` turns it into the judges' version at the end.
 
@@ -69,7 +68,7 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    - shrink `scaffold` to what's missing (for example tests, lint, or a deploy), instead of creating a new skeleton
 
 5. **Split the MVP into changes.** List 4–8 vertical slices for the must-haves (one user action each: UI + API + data), one change per approved opportunity, plus a `scaffold` change. For each one, create a full change with the `openspec-propose` skill (`/opsx-propose` in VS Code): proposal, spec deltas, design and tasks. You are authorized to create all of them in this session without stopping between changes. Requirements:
-   - **`scaffold` comes first**: repo skeleton, stack installed, the Install/Lint/Test/Build rows of the **Commands** table in `AGENTS.md` filled in (the `check` skill runs them), `## Project structure` in `AGENTS.md` and the README's folder list corrected to match the real tree, the installed versions and any corrections written into the coding standards in `.github/instructions/`, hello-world deployed and its steps written in `## Deploy`. Its groups are `priority=p0`, with no `agent=auto` and with `assignee=<conductor's GitHub login>` (get it from `gh api user --jq .login`), because the conductor drives it interactively. Every group of every other change depends on its last group, for example `depends=scaffold:2`.
+   - **`scaffold` comes first**: repo skeleton, stack installed, the Install/Lint/Test/Build rows of the **Commands** table in `AGENTS.md` filled in (the `check` skill runs them), `## Project structure` in `AGENTS.md` and the README's folder list corrected to match the real tree, the installed versions and any corrections written into the coding standards in `.github/instructions/`, hello-world deployed and its steps written in `## Deploy`. While it's being built, `check --allow-todo` skips the Test and Build rows that don't exist yet. Its groups are `priority=p0`, with no `agent=auto` and with `assignee=<conductor's GitHub login>` (get it from `gh api user --jq .login`), because the conductor drives it interactively. Every group of every other change depends on its last group, for example `depends=scaffold:2`.
    - **Contracts are the critical path.** Each `design.md` starts with a `## Contracts` section giving exact API shapes. Make contracts between changes agree, for example the frontend change uses the same response shape the backend change defines.
    - **Every task group** in `tasks.md` has the `<!-- issue: ... -->` metadata line described in the `rules:` in `openspec/config.yaml`. Aim for 10–25 groups in total, about half of them `agent=auto`, spread across the 2 lanes (`frontend`, which owns design too, and `backend`), so every worker has work in the first wave. The first frontend group builds the design system (tokens, components, page shell), and the screens depend on it.
 

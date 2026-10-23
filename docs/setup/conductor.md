@@ -32,9 +32,9 @@ It writes the OpenSpec brief and changes, including a `scaffold` change reserved
 
 In PowerShell, in the repo folder:
 ```
-copilot --agent orchestrator --allow-tool "shell(node:*)" --allow-tool "shell(gh:*)" --allow-tool "shell(git:*)" --allow-tool "shell(openspec:*)" --allow-tool write -i "Start orchestrating."
+copilot --agent orchestrator --allow-tool "shell(node:*)" --allow-tool "shell(gh:*)" --allow-tool "shell(git:*)" --allow-tool "shell(openspec:*)" --allow-tool "github-mcp-server" --enable-all-github-mcp-tools --allow-tool write -i "Start orchestrating."
 ```
-It runs `setup` (safe to repeat), then loops on `node scripts/orchestrate.mjs tick --watch 10`. Every 30 seconds that creates issues from merged specs, unblocks, archives and assigns work, and after each 10-minute round it reports what needs a human. Its first tick creates every issue, and the `scaffold` issues come out already assigned to you.
+It runs `setup` (safe to repeat), then loops on `node scripts/orchestrate.mjs tick --watch 10`. Every 30 seconds that creates issues from merged specs, unblocks, archives, assigns work and moves the cards on the project board, and after each 10-minute round it reports what needs a human. Your account needs the `project` scope for the board (`gh auth refresh -s project`, see [repo.md](repo.md#3-labels-the-worker-registry-and-the-project-board)). Its first tick creates every issue, and the `scaffold` issues come out already assigned to you.
 
 - **Leave this window open all day.** When the session gets long, quit and run the same command again: all state lives in GitHub, so nothing is lost.
 - **Exactly one per team.** If a second orchestrator is started by mistake, it refuses to run.

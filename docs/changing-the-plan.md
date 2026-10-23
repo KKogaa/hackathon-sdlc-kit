@@ -28,7 +28,7 @@ flowchart LR
 ```
 
 **Why it's safe to change the plan while everything runs:**
-- Issues are only created from specs **merged on `origin/main`**. A feature you're still planning, or that you abandon halfway, never reaches the board.
+- Issues are only created from specs **merged on main**. A feature you're still planning, or that you abandon halfway, never reaches the board.
 - Planning checks the files that in-progress issues touch, and makes the new groups wait (`depends=`) for any work they would collide with.
 - A change to an existing Contract is shown to you explicitly before you approve, because it means rework for whoever builds on it.
 - Workers may review and merge spec PRs, but never rewrite them. A spec PR that's sent back comes to you, through the orchestrator.

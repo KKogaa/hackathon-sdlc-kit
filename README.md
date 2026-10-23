@@ -4,7 +4,7 @@ A GitHub template repo that turns **GitHub Copilot** (VS Code or CLI) into a fas
 
 You write the plan once as **[OpenSpec](https://github.com/Fission-AI/OpenSpec) changes**, and every task group becomes a GitHub issue. The orchestrator assigns issues and reviews to idle workers. The workers build, open PRs, review and merge **each other's** PRs. Humans make the decisions: they agree the contracts and answer the questions workers park for them.
 
-No cloud agents, no GitHub Actions, no server. The shared state is GitHub itself: issues, PRs, labels, and one **Worker registry** issue. `scripts/orchestrate.mjs` reads and writes that state.
+No cloud agents, no GitHub Actions, no server. The shared state is GitHub itself: issues, PRs, labels, and one **Worker registry** issue. `scripts/orchestrate.mjs` reads and writes that state, and keeps a **GitHub Project board** in step with it, so the whole team watches the work move from Ready to Done.
 
 - [How it works](#how-it-works)
 - [Roles](#roles)
@@ -54,6 +54,7 @@ flowchart LR
 | The current, merged behavior of the system | `openspec/specs/<capability>/spec.md` | `openspec archive` |
 | The backlog and its state | GitHub issue and PR labels | the orchestrator (`tick`), plus workers for their own PRs |
 | Which workers exist, and what each one is doing | **Worker registry** issue: one heartbeat comment per worker, one assignments comment | each worker writes **only** its own comment, and the orchestrator writes **only** the assignments |
+| The board everyone watches: every issue, in a **Stage** column | a **GitHub Project** linked to the repo | the orchestrator (`tick`), from the labels and PRs. It's a view: dragging a card changes nothing |
 
 **Every piece of state has exactly one writer**, so nothing can race, however many workers you add.
 
@@ -97,14 +98,16 @@ Every 30 seconds, `tick` does the housekeeping: it creates issues for new task g
 
 | # | Action | When | Why this order |
 |---|--------|------|----------------|
-| 1 | `fix` | A PR **this worker** opened was sent back (`pr:changes`) or has a merge conflict | Finishing beats starting |
+| 1 | `fix` | A PR **this worker** opened was sent back (`pr:changes`) or has a merge conflict. Also anyone's, once its author's worker is gone | Finishing beats starting |
 | 2 | `review` | A PR is waiting (`pr:needs-review`) that was opened by **another GitHub account**, oldest first | PRs never pile up. GitHub doesn't allow approving your own PR |
 | 3 | `implement` | A `status:ready` issue in the worker's lane, by priority. In a second pass, any lane | Lanes first, but nobody idles |
 
 - **Live** means the worker polled in the last 5 minutes. A worker polls every 30 seconds while it waits.
 - If a worker restarts, its unfinished assignment comes back to it.
-- If a worker goes silent for **4 hours**, the orchestrator hands its work to someone else. Before that, from **2.5 hours**, it flags the worker to the conductor.
-- `tick` refuses to run while **another orchestrator** was active in the last 2 minutes. There is only ever one writer of assignments.
+- A busy worker shows it's alive with `beat` at each checkpoint (`start`, `check` and `pr` do it for it) and with the commits it pushes. With no sign of life for **25 minutes** the orchestrator flags it to the conductor, and at **45 minutes** it hands the unit to someone else, who continues the branch.
+- A unit reported **failed** (`done --failed`), a review that ended without a verdict, and an issue whose PR was closed unmerged all go back to the pool, never to the same worker. After **two failures** the item goes to a human (`status:needs-decision` or `pr:needs-human`).
+- Nothing stays half-assigned: a new assignment is saved before its labels are written, so a crash in between is finished by the next tick. A failed round (a network blip) doesn't stop `tick --watch`.
+- `tick` won't run alongside **another orchestrator** that was active in the last 2 minutes: `--watch` waits for it to go quiet. There is only ever one writer of assignments.
 
 ### One unit of work, end to end
 
@@ -119,7 +122,7 @@ sequenceDiagram
     W->>R: work --lane backend (heartbeat)
     O->>R: assign alice/hack → implement #14 (role frontend)
     R-->>W: {"action":"implement","issue":14,"role":"frontend"}
-    W->>W: subagent frontend: branch from origin/main, code, tests, check, PR
+    W->>W: subagent frontend: start (branch), code, tests, check, pr
     W->>R: PR #15 "<!-- worker:alice/hack -->" + pr:needs-review · done
     O->>R: assign bob/hack → review #15 (different account)
     R-->>W2: {"action":"review","pr":15,"role":"reviewer"}
@@ -247,14 +250,21 @@ node scripts/orchestrate.mjs status                        # board, workers and 
 node scripts/orchestrate.mjs sync --dry-run                # preview the issues a spec would create
 
 # orchestrator (exactly one)
-node scripts/orchestrate.mjs setup                         # labels + worker registry issue (once, safe to repeat)
+node scripts/orchestrate.mjs setup                         # labels, worker registry issue, project board (once, safe to repeat)
 node scripts/orchestrate.mjs tick --watch 10               # assign work every 30s for 10 min, then report
 node scripts/orchestrate.mjs take scaffold                 # assign a change's open issues to me
 
 # worker (any number)
 node scripts/orchestrate.mjs work --lane frontend --wait 10 # heartbeat + my unit and its role as JSON (waits up to 10 min)
-node scripts/orchestrate.mjs done                          # I finished my unit
-node scripts/orchestrate.mjs reviewed 15 --merge --body-file r.md  # approve + merge (or --changes: once per PR)
+node scripts/orchestrate.mjs done [--failed]               # I finished my unit (or gave up on it)
+node scripts/orchestrate.mjs beat coding                   # still alive, mid-unit (specialists, every ~15 min)
+node scripts/orchestrate.mjs start 12                      # branch 12-<slug> from main, or continue the issue's branch
+node scripts/orchestrate.mjs rebase                        # bring this branch up to date with main
+node scripts/orchestrate.mjs check                         # the CI: the Commands table, recorded for this commit
+node scripts/orchestrate.mjs pr --title "feat(api): items" --body-file .orchestrate/pr-body.md  # push + open the PR
+node scripts/orchestrate.mjs park 12 --body-file .orchestrate/question.md  # ask a human, step away
+node scripts/orchestrate.mjs review-start 15               # the PR merged with main, ready for check
+node scripts/orchestrate.mjs reviewed 15 --merge --body-file .orchestrate/review-15.md  # approve + merge what check passed (or --changes: once per PR)
 node scripts/orchestrate.mjs worktree w2                   # a folder for another worker on this machine
 ```
 
@@ -276,7 +286,8 @@ The `check` skill runs `openspec validate --all --strict`, then the Install, Lin
 | `.github/copilot-instructions.md`, `AGENTS.md` | Always-on rules and the team workflow |
 | `.github/instructions/` | Coding standards: `coding-standards` (every file), `typescript`, `react`, and for the backend `backend-architecture` (pragmatic hexagonal) with `fastify` or `java` + `quarkus`. Copilot loads them by file type; kickoff keeps the chosen backend's |
 | `.vscode/settings.json` | Agent skills on, high request limit, terminal auto-approve for routine commands |
-| `scripts/orchestrate.mjs` | The coordinator (Node, no dependencies): labels, worker registry, sync, assignment, unblock, archive, worktrees. The only script in the kit |
+| `.vscode/mcp.json` | GitHub's MCP server for VS Code sessions. Agents use it (or Copilot CLI's built-in one) for issues and PRs, and fall back to `gh` |
+| `scripts/orchestrate.mjs` | The coordinator (Node, no dependencies): labels, worker registry, sync, assignment, recovery, unblock, archive, worktrees, and the scripted unit steps: branches, the CI (`check`), PRs and the merge gate. Fork-aware. The only script in the kit |
 | `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | Bug/task templates and the PR checklist |
 | `bin/create.mjs`, `package.json` | The `npx` installer. Not copied by it, and neither is this README (kickoff writes the project's own). If you used the template, `scaffold` can delete them or replace `package.json` with the project's own |
 
