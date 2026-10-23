@@ -11,6 +11,8 @@ winget install --id OpenJS.NodeJS.LTS -e
 winget install --id GitHub.cli -e
 winget install --id Microsoft.VisualStudioCode -e
 ```
+If the team picks the **Java + Quarkus** backend: `winget install --id Microsoft.OpenJDK.21 -e`, and Docker Desktop if you want Quarkus Dev Services to start the database for you.
+
 Optional: `winget install --id astral-sh.uv -e`, if the team picks a Python stack.
 
 ## 2. Allow npm's command shims to run

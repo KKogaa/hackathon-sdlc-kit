@@ -8,8 +8,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const KIT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// The installer itself is not part of the kit.
-const SKIP = new Set(['bin', 'node_modules', '.git', 'package.json', 'package-lock.json']);
+// The installer itself is not part of the kit, and README.md is the kit's own: the project gets its own from kickoff.
+const SKIP = new Set(['bin', 'node_modules', '.git', 'package.json', 'package-lock.json', 'README.md']);
 
 const args = process.argv.slice(2);
 if (args.includes('-h') || args.includes('--help')) {

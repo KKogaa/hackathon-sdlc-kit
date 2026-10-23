@@ -274,10 +274,11 @@ The `check` skill runs `openspec validate --all --strict`, then the Install, Lin
 | `.github/prompts/` | `/work`, `/orchestrate`, `/kickoff`, `/plan`, `/decide`, `/standup`, `/demo`, `/opsx-*` |
 | `.github/skills/*/SKILL.md` | Agent Skills: the SDLC workflows |
 | `.github/copilot-instructions.md`, `AGENTS.md` | Always-on rules and the team workflow |
+| `.github/instructions/` | Coding standards: `coding-standards` (every file), `typescript`, `react`, and for the backend `backend-architecture` (pragmatic hexagonal) with `fastify` or `java` + `quarkus`. Copilot loads them by file type; kickoff keeps the chosen backend's |
 | `.vscode/settings.json` | Agent skills on, high request limit, terminal auto-approve for routine commands |
 | `scripts/orchestrate.mjs` | The coordinator (Node, no dependencies): labels, worker registry, sync, assignment, unblock, archive, worktrees. The only script in the kit |
 | `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | Bug/task templates and the PR checklist |
-| `bin/create.mjs`, `package.json` | The `npx` installer. Not copied by it. If you used the template, `scaffold` can delete them or replace `package.json` with the project's own |
+| `bin/create.mjs`, `package.json` | The `npx` installer. Not copied by it, and neither is this README (kickoff writes the project's own). If you used the template, `scaffold` can delete them or replace `package.json` with the project's own |
 
 ### Compatibility
 

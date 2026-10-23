@@ -7,7 +7,7 @@ description: Prepare the hackathon submission: a polished README, demo script, p
 
 ## Steps
 
-1. **README.md** at the repo root (judges read it first):
+1. **README.md** at the repo root (judges read it first). Start from the one `kickoff` wrote, and keep its Project structure section in step with `AGENTS.md`:
    - Name and a one-line pitch
    - Screenshot or GIF at the top
    - Problem → solution (3 sentences)

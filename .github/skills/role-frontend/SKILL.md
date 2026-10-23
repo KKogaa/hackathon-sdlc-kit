@@ -23,6 +23,7 @@ For the aesthetic direction (palette, typography, layout, and avoiding the gener
 
 ## Build: how it works
 
+- **Load the coding standards before writing code:** `coding-standards`, `typescript` and `react` (`.instructions.md`) in `.github/instructions/`, unless they're already in your context. If a standard is wrong for this project, fix the file in its own small PR.
 - **Build against the Contracts**, not against the backend's current code. If an endpoint isn't merged yet, call it through a small typed API client that returns fixture data matching the Contract exactly. Swapping in the real call later is then a one-line change. Never invent fields.
 - **Every screen has every state:** loading, empty, error (with a retry where it makes sense) and success. The demo path must never show a blank screen or a raw error.
 - **Feedback on actions:** buttons look disabled and show progress while a request is in flight. Show success and failure clearly.
@@ -35,4 +36,4 @@ For the aesthetic direction (palette, typography, layout, and avoiding the gener
 
 ## Reviewing frontend PRs
 
-Check the design as well as the code: tokens used (no hard-coded values), existing components reused, every UI state present, contrast and focus, phone width, and copy that reads well. Missing states and hard-coded styles are **blocking**. Taste differences are **suggestions**.
+Check the design as well as the code, and the code against the `typescript` and `react` standards in `.github/instructions/`: tokens used (no hard-coded values), existing components reused, every UI state present, contrast and focus, phone width, and copy that reads well. Missing states and hard-coded styles are **blocking**. Taste differences are **suggestions**.

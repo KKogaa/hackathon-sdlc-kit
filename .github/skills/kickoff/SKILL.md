@@ -13,6 +13,7 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    - The problem and who has it (1 sentence each)
    - The demo moment: what the judges must see working
    - Hard constraints: the stack the team knows, required APIs or sponsor tech, the deadline
+   - The backend stack: **TypeScript + Fastify** (the default: one language across both lanes, contracts shared as Zod schemas) or **Java + Quarkus** (if the team is stronger in Java). The frontend is React + TypeScript. The kit ships coding standards for exactly these, so another stack means writing its standards first.
    - How it's judged, if they know: criteria, categories, sponsor prizes
 
 1b. **Must-haves, then opportunities.** Don't just transcribe the idea: look for what would make it win. Send ONE message with two parts, then wait for the answer. This is the only stop before the spec PR.
@@ -43,13 +44,32 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
 
 4. **Fill the project brief.** Replace every `<...>` in the `context:` block of `openspec/config.yaml`: problem, demo script (3–5 steps), MVP scope (In: the must-haves, Stretch: the approved opportunities, Later, Out), tech stack with one-line reasons, architecture, lanes. Keep the `rules:` block as it is: it is what makes every agent write issue-ready tasks.
 
-4b. **Respect what the project already has.** The kit is often added to a repo the team created by hand, sometimes already with a framework (for example from `create-next-app`, `vite` or `fastapi`). Look at the repo first (`package.json`, `pyproject.toml`, existing folders). If a stack is already there:
+4a. **Fill the top of `AGENTS.md`.** Replace the TODOs in `## Project` (one line: what it is and the stack) and `## Project structure` (the planned top-level folders, one line each, with the lane that owns it). Give each lane its own folders, so parallel workers rarely touch the same files, and use the same paths in the `files=` hints of the task groups.
+
+4b. **Select the coding standards.** `.github/instructions/` ships `coding-standards` (every file), `backend-architecture`, `typescript`, `react`, `fastify`, `java` and `quarkus`. Copilot loads each one by its `applyTo` glob, and the role skills tell every other agent which to read from the `Backend:` line in `AGENTS.md`.
+   - Fill in the `Backend:` and `Frontend:` lines in `## Project` of `AGENTS.md`.
+   - Set the `applyTo` of `backend-architecture.instructions.md` to the backend folder (e.g. `"api/**"`). The backend is pragmatic hexagonal whichever stack: plan its Project structure as one folder per feature with `domain/`, `application/` and `adapters/`.
+   - TypeScript + Fastify: set the `applyTo` of `fastify.instructions.md` to the backend folder (e.g. `"api/**/*.ts"`), and delete `java` and `quarkus`.
+   - Java + Quarkus: delete `fastify`. Keep `typescript` (the frontend uses it). Plan the frontend's API types to be generated from Quarkus' OpenAPI, instead of shared Zod schemas.
+   - Don't rewrite the standards. If this project needs a different choice (another database library, a styling library), add it to the bottom of the relevant file under `## This project`.
+
+4c. **Write the project's `README.md`**, for people (teammates now, judges later). If there is none, or it is still the kit's own (it starts with `# Hackathon SDLC Kit`), write a new one. If the project already has its own, add only the missing sections. Keep it short:
+   - name and one-line pitch, then the problem in 1–2 sentences
+   - the demo script (the same 3–5 steps as the brief)
+   - the tech stack, with sponsor tech called out
+   - **Project structure**: the top-level folders with one line each, and a link to the lane ownership in `AGENTS.md#project-structure` (don't copy the full map, it would drift)
+   - **Getting started**: point to the Install and Dev rows of the Commands table in `AGENTS.md`, which `scaffold` fills in
+   - **How we work**: links to `docs/playbook.md` and `docs/setup/README.md`
+
+   `demo-prep` turns it into the judges' version at the end.
+
+4d. **Respect what the project already has.** The kit is often added to a repo the team created by hand, sometimes already with a framework (for example from `create-next-app`, `vite` or `fastapi`). Look at the repo first (`package.json`, `pyproject.toml`, existing folders). If a stack is already there:
    - take it as decided, and put it in the brief's tech stack
    - fill the **Commands** table in `AGENTS.md` from it right away (Install, Dev, Lint, Test, Build), using commands that work in PowerShell
    - shrink `scaffold` to what's missing (for example tests, lint, or a deploy), instead of creating a new skeleton
 
 5. **Split the MVP into changes.** List 4–8 vertical slices for the must-haves (one user action each: UI + API + data), one change per approved opportunity, plus a `scaffold` change. For each one, create a full change with the `openspec-propose` skill (`/opsx-propose` in VS Code): proposal, spec deltas, design and tasks. You are authorized to create all of them in this session without stopping between changes. Requirements:
-   - **`scaffold` comes first**: repo skeleton, stack installed, the Install/Lint/Test/Build rows of the **Commands** table in `AGENTS.md` filled in (the `check` skill runs them), hello-world deployed. Its groups are `priority=p0`, with no `agent=auto` and with `assignee=<conductor's GitHub login>` (get it from `gh api user --jq .login`), because the conductor drives it interactively. Every group of every other change depends on its last group, for example `depends=scaffold:2`.
+   - **`scaffold` comes first**: repo skeleton, stack installed, the Install/Lint/Test/Build rows of the **Commands** table in `AGENTS.md` filled in (the `check` skill runs them), `## Project structure` in `AGENTS.md` and the README's folder list corrected to match the real tree, the installed versions and any corrections written into the coding standards in `.github/instructions/`, hello-world deployed and its steps written in `## Deploy`. Its groups are `priority=p0`, with no `agent=auto` and with `assignee=<conductor's GitHub login>` (get it from `gh api user --jq .login`), because the conductor drives it interactively. Every group of every other change depends on its last group, for example `depends=scaffold:2`.
    - **Contracts are the critical path.** Each `design.md` starts with a `## Contracts` section giving exact API shapes. Make contracts between changes agree, for example the frontend change uses the same response shape the backend change defines.
    - **Every task group** in `tasks.md` has the `<!-- issue: ... -->` metadata line described in the `rules:` in `openspec/config.yaml`. Aim for 10–25 groups in total, about half of them `agent=auto`, spread across the 2 lanes (`frontend`, which owns design too, and `backend`), so every worker has work in the first wave. The first frontend group builds the design system (tokens, components, page shell), and the screens depend on it.
 
@@ -59,12 +79,13 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
 
 8. **Open the spec PR** with the `open-pr` skill, titled `docs(spec): MVP spec and contracts`. This is the moment the team reviews and agrees the contracts together.
 
-9. **After it merges**, start the orchestrator: one Copilot CLI session, with `copilot --agent orchestrator` (see README). Its first tick creates every issue and links the dependencies. The `scaffold` groups carry `assignee=<conductor login>`, so they're created already assigned to the conductor and no worker gets them. Then tell the team to start their workers: `/work <lane>` in VS Code. They review scaffold PRs and otherwise wait until scaffold merges and the board unblocks.
+9. **After it merges**, start the orchestrator: one Copilot CLI session, with `copilot --agent orchestrator` (see `docs/setup/conductor.md`). Its first tick creates every issue and links the dependencies. The `scaffold` groups carry `assignee=<conductor login>`, so they're created already assigned to the conductor and no worker gets them. Then tell the team to start their workers: `/work <lane>` in VS Code. They review scaffold PRs and otherwise wait until scaffold merges and the board unblocks.
 
 10. **Print the plan**: a table of change, group, lane, size, priority (must-have p0, or opportunity p1/p2), owner (interactive, or `agent:auto` for any worker) and dependencies, plus who takes `scaffold`.
 
 ## Output
 
+- `AGENTS.md` with the project, stack and planned structure, a project `README.md`, and only the coding standards for the chosen stack in `.github/instructions/`
 - `openspec/config.yaml` with the brief (must-haves, approved opportunities, Later list), and one change per slice and per approved opportunity, validated, in a merged spec PR
 - Labels, the MVP milestone, and the issue backlog (created by `orchestrate.mjs sync` after the merge)
 - A first-wave assignment plan for the 6 lanes
