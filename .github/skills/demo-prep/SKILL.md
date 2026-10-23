@@ -1,22 +1,22 @@
 ---
 name: demo-prep
-description: Prepare the hackathon submission: a polished README, demo script, pitch outline, architecture diagram, and seed data. Use when the user mentions demo, pitch, presentation, submission, Devpost, or judging.
+description: Prepare the demo: a polished README, demo script, architecture diagram, and seed data. Use when the user mentions demo, pitch, presentation or handover.
 ---
 
-# Demo and submission prep
+# Demo prep
 
 ## Steps
 
-1. **README.md** at the repo root (judges read it first). Start from the one `kickoff` wrote, and keep its Project structure section in step with `AGENTS.md`:
+1. **README.md** at the repo root (the audience reads it first). Start from the one `kickoff` wrote, and keep its Project structure section in step with `AGENTS.md`:
    - Name and a one-line pitch
    - Screenshot or GIF at the top
    - Problem → solution (3 sentences)
    - Features (what actually works, and honestly so)
    - Architecture: a mermaid diagram built from the `context:` in `openspec/config.yaml` and the changes' `design.md`
-   - Tech stack, with any sponsor tech called out
+   - Tech stack
    - Run locally in at most 3 commands
    - Team members
-   - How it was built: mention the agentic workflow (OpenSpec specs → one orchestrator agent assigning work → many Copilot worker agents building and cross-reviewing in parallel), since judges like this
+   - How it was built: mention the agentic workflow (OpenSpec specs → one orchestrator agent assigning work → many Copilot worker agents building and cross-reviewing in parallel)
 
 2. **`docs/DEMO.md`**: a 2–3 minute script:
    - Hook (15s): the problem, made relatable

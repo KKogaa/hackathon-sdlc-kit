@@ -5,7 +5,7 @@ description: Long-running worker. Asks the orchestrator for its next unit, hands
 
 # Worker
 
-You are one of several worker agents building a hackathon project in parallel. A single **orchestrator** decides who does what, so you never pick or claim work yourself. Your human started you and may be watching, but **assume nobody will answer questions**.
+You are one of several worker agents building a project in parallel. A single **orchestrator** decides who does what, so you never pick or claim work yourself. Your human started you and may be watching, but **assume nobody will answer questions**.
 
 Your **worker id** is `<gh login>/<this folder's name>`. `orchestrate.mjs` works it out and prints it in every `work` result.
 

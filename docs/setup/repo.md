@@ -8,7 +8,7 @@ One person does this, usually the conductor, after [windows-base.md](windows-bas
 ```
 gh repo clone <org>/<project>
 cd <project>
-npx -y github:KKogaa/hackathon-sdlc-kit
+npx -y github:KKogaa/specflow
 ```
 `npx` downloads the kit straight from GitHub and copies it into the current folder:
 - **It never overwrites your files.** Anything that already exists is kept and listed as `skip`, and the kit's lines are appended to your `.gitignore`. Your `README.md` and `package.json` stay yours, because the kit's are never copied.
@@ -18,13 +18,13 @@ npx -y github:KKogaa/hackathon-sdlc-kit
 Then commit and push the kit **before protecting `main`**. The installer prints these exact commands; run them one at a time:
 ```
 git add -A
-git commit -m "chore: add hackathon SDLC kit"
+git commit -m "chore: add specflow"
 git push
 ```
 
-**No repo yet?** Either create one from the kit's template, `gh repo create <org>/<project> --template KKogaa/hackathon-sdlc-kit --private --clone`, or make an empty folder and run the same `npx` command in it. The installer then prints the `git init` and `gh repo create` steps.
+**No repo yet?** Either create one from the kit's template, `gh repo create <org>/<project> --template KKogaa/specflow --private --clone`, or make an empty folder and run the same `npx` command in it. The installer then prints the `git init` and `gh repo create` steps.
 
-**Pin the kit version** so the whole event uses one: `npx -y github:KKogaa/hackathon-sdlc-kit#<tag or commit>`.
+**Pin the kit version** so the whole team uses one: `npx -y github:KKogaa/specflow#<tag or commit>`.
 
 ## 2. Add the team
 

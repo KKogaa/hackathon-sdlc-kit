@@ -1,5 +1,5 @@
 ---
-description: Prepare the submission - README, demo script, seed data and demo-path risks
+description: Prepare the demo - README, demo script, seed data and demo-path risks
 agent: conductor
 ---
 

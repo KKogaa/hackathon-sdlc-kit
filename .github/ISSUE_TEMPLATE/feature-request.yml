@@ -1,5 +1,5 @@
 name: Feature request
-description: Ask for new behaviour mid-hackathon. The conductor plans it into OpenSpec work. Workers don't pick these up directly
+description: Ask for new behaviour mid-project. The conductor plans it into OpenSpec work. Workers don't pick these up directly
 labels: ["type:feature-request"]
 body:
   - type: textarea

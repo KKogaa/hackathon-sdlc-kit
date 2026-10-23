@@ -1,4 +1,4 @@
-# Changing the plan mid-hackathon
+# Changing the plan mid-project
 
 Scope changes all day. You change it by **talking to the orchestrator** while the workers keep building. The orchestrator's Copilot CLI session is the conductor's control seat (see [setup/conductor.md](setup/conductor.md#4-start-the-orchestrator)).
 

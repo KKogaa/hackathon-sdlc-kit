@@ -1,9 +1,9 @@
 ---
 name: plan-feature
-description: Add a feature or change scope mid-hackathon, interactively with the conductor - plan it as an OpenSpec change that doesn't collide with work in flight, get the human's approval in chat, and ship the spec PR so the orchestrator turns it into issues. Use when the user says "add feature", "we also need", "plan", "change the scope", or asks to plan a feature request issue.
+description: Add a feature or change scope mid-project, interactively with the conductor - plan it as an OpenSpec change that doesn't collide with work in flight, get the human's approval in chat, and ship the spec PR so the orchestrator turns it into issues. Use when the user says "add feature", "we also need", "plan", "change the scope", or asks to plan a feature request issue.
 ---
 
-# Plan a feature mid-hackathon
+# Plan a feature mid-project
 
 The workers keep building while you plan. Your job is to turn the human's idea into issue-ready work that **fits around what's already in flight**, with as little of their time as possible. Never create feature issues by hand: the orchestrator creates them from the merged `tasks.md`.
 
@@ -25,7 +25,7 @@ openspec list --specs
 node scripts/orchestrate.mjs status
 ```
 - **Extend an existing capability** with `MODIFIED` or `ADDED` requirements on `openspec/specs/<capability>/spec.md`, rather than creating a near-duplicate capability.
-- **Contracts in use:** if the feature changes an API shape that open or in-progress issues build on, say so to the human. A contract change mid-event costs rework.
+- **Contracts in use:** if the feature changes an API shape that open or in-progress issues build on, say so to the human. A contract change mid-project costs rework.
 - **Files in flight:** read the "Files likely touched" of `status:in-progress` issues. A new group that touches the same files must `depends=` on that work (`<change>:<N>`), or it'll merge-conflict.
 
 ## 3. Plan it on a branch

@@ -1,6 +1,6 @@
 ---
 name: ship-release
-description: Cut a tagged release from main with an auto-generated changelog and verify the deploy. Use when the user says "release", "tag a version", "deploy", "ship the demo build", or before judging.
+description: Cut a tagged release from main with an auto-generated changelog and verify the deploy. Use when the user says "release", "tag a version", "deploy", "ship the demo build", or before the demo.
 ---
 
 # Ship a release
@@ -13,7 +13,7 @@ description: Cut a tagged release from main with an auto-generated changelog and
    - Finished OpenSpec changes are archived (`openspec list`), so `openspec/specs/` describes what you're shipping
    - The demo path works locally. Run through the demo script in the `context:` of `openspec/config.yaml`.
 
-2. **Pick a version**: use `v0.x.0` while iterating, and `v1.0.0` for the judged build.
+2. **Pick a version**: use `v0.x.0` while iterating, and `v1.0.0` for the demo build.
    ```
    git checkout main
    git pull --ff-only
@@ -25,6 +25,6 @@ description: Cut a tagged release from main with an auto-generated changelog and
 
 4. **Smoke test** the deployed URL: load the app, then run the 3–5 demo steps.
 
-5. **Freeze**: within the last hour before judging, recommend that only `fix:` PRs touching the demo path get merged.
+5. **Freeze**: within the last hour before the demo, recommend that only `fix:` PRs touching the demo path get merged.
 
 Report the release URL, the deploy URL, and the smoke-test result.

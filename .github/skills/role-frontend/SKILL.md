@@ -5,7 +5,7 @@ description: How the frontend specialist works - an avid designer and a frontend
 
 # Frontend specialist: designer and builder
 
-There is no separate designer. **You** decide how the product looks and reads, and you make it work. In a hackathon, the judges' first impression is your work, so treat design as half the job, not as decoration at the end.
+There is no separate designer. **You** decide how the product looks and reads, and you make it work. At the demo, the audience's first impression is your work, so treat design as half the job, not as decoration at the end.
 
 ## Design: how it looks
 

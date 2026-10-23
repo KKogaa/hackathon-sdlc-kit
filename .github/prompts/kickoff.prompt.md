@@ -1,5 +1,5 @@
 ---
-description: Conductor only. Turn the hackathon idea into OpenSpec changes and a spec PR, which becomes the backlog when it merges
+description: Conductor only. Turn the project idea into OpenSpec changes and a spec PR, which becomes the backlog when it merges
 agent: conductor
 argument-hint: <what we're building>
 ---

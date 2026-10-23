@@ -1,6 +1,6 @@
 # Machine setup
 
-Every machine at the hackathon runs **Windows**. Pick your profile, follow its page top to bottom, and you're done.
+Every machine on the team runs **Windows**. Pick your profile, follow its page top to bottom, and you're done.
 
 | Profile | Who | How many | Guide | Time |
 |---|---|---|---|---|
@@ -29,4 +29,4 @@ Lanes are only preferences: an idle worker helps any lane. To add workers later,
 3. Conductor: [conductor.md](conductor.md), which covers kickoff, starting the orchestrator, and building `scaffold`.
 4. Workers: [worker.md](worker.md). Start as soon as the orchestrator is running. Workers sit idle until `scaffold` merges.
 
-After setup: [playbook.md](../playbook.md) for the day itself, and [changing-the-plan.md](../changing-the-plan.md) for adding features, bugs and priority changes mid-event.
+After setup: [playbook.md](../playbook.md) for the day itself, and [changing-the-plan.md](../changing-the-plan.md) for adding features, bugs and priority changes mid-project.

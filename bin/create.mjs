@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Installs the hackathon SDLC kit into a new or existing directory.
-//   npx github:KKogaa/hackathon-sdlc-kit [dir] [--force] [--dry-run]
+// Installs Specflow into a new or existing directory.
+//   npx github:KKogaa/specflow [dir] [--force] [--dry-run]
 // Existing files are kept unless --force; an existing .gitignore gets the kit's missing lines appended.
 import { existsSync, mkdirSync, readdirSync, readFileSync, copyFileSync, appendFileSync, chmodSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -13,7 +13,7 @@ const SKIP = new Set(['bin', 'node_modules', '.git', 'package.json', 'package-lo
 
 const args = process.argv.slice(2);
 if (args.includes('-h') || args.includes('--help')) {
-  console.log(`Usage: npx github:KKogaa/hackathon-sdlc-kit [dir] [--force] [--dry-run]
+  console.log(`Usage: npx github:KKogaa/specflow [dir] [--force] [--dry-run]
 
   dir        where to install (default: current directory; created if missing)
   --force    overwrite files that already exist
@@ -46,7 +46,7 @@ for (const src of walk(KIT_ROOT)) {
     const missing = readFileSync(src, 'utf8').split(/\r?\n/).filter((l) => l && !have.has(l));
     if (!missing.length) { counts.skipped++; continue; }
     console.log(`  merge  ${rel} (+${missing.length} lines)`);
-    if (!dryRun) appendFileSync(dest, `\n# hackathon-sdlc-kit\n${missing.join('\n')}\n`);
+    if (!dryRun) appendFileSync(dest, `\n# specflow\n${missing.join('\n')}\n`);
     counts.merged++;
     continue;
   }
@@ -90,7 +90,7 @@ const steps = [
   cd && `cd ${cd}`,
   !hasGit && 'git init -b main',
   'git add -A',
-  'git commit -m "chore: add hackathon SDLC kit"',
+  'git commit -m "chore: add specflow"',
   remote ? 'git push          # before protecting main; teammates get the kit by cloning this repo' : 'gh repo create <org>/<project> --private --source . --push',
   'node scripts/orchestrate.mjs setup',
 ].filter(Boolean);

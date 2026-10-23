@@ -5,7 +5,7 @@ description: Write fast, focused tests for new or changed code using the project
 
 # Write tests
 
-Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim for confidence that the main flows don't break when six workers merge at once.
+Testing philosophy: **protect the demo path**. Skip 100% coverage. Aim for confidence that the main flows don't break when six workers merge at once.
 
 ## Steps
 

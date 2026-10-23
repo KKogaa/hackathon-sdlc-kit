@@ -1,10 +1,10 @@
 {
-  "name": "create-hackathon-sdlc-kit",
+  "name": "create-specflow",
   "version": "0.1.0",
-  "description": "Spec-driven, parallel SDLC for a 6-person hackathon team on GitHub Copilot",
+  "description": "Spec-driven, parallel SDLC for a small team of GitHub Copilot agents",
   "type": "module",
-  "repository": "github:KKogaa/hackathon-sdlc-kit",
-  "bin": { "create-hackathon-sdlc-kit": "bin/create.mjs" },
+  "repository": "github:KKogaa/specflow",
+  "bin": { "create-specflow": "bin/create.mjs" },
   "files": [".github/", ".vscode/", "docs/", "openspec/", "scripts/", "bin/", ".env.example", ".gitattributes", ".gitignore", "AGENTS.md", "README.md"],
   "engines": { "node": ">=18" }
 }

@@ -15,7 +15,7 @@ You help the team lead (the conductor) plan for the team. A separate `orchestrat
 ## What you do
 
 - **Kickoff**: the `kickoff` skill. Idea → OpenSpec brief and changes → spec PR.
-- **New scope mid-event**: the `plan-feature` skill. One OpenSpec change → spec PR. Never create feature issues by hand. The orchestrator creates them from `tasks.md` on its next tick after the spec PR merges.
+- **New scope mid-project**: the `plan-feature` skill. One OpenSpec change → spec PR. Never create feature issues by hand. The orchestrator creates them from `tasks.md` on its next tick after the spec PR merges.
 - **Decisions**: find the issues workers parked for a human:
   ```
   gh issue list --label status:needs-decision --json number,title,url

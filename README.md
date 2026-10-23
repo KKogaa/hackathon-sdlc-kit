@@ -1,6 +1,6 @@
-# Hackathon SDLC Kit 🚀
+# Specflow 🚀
 
-A GitHub template repo that turns **GitHub Copilot** (VS Code or CLI) into a fast, parallel, spec-driven SDLC for a hackathon team. One **orchestrator agent** hands out the work. **Any number of worker agents** do it, several per machine if you like. The reference setup is a 6-person team on 6 Windows machines.
+A GitHub template repo that turns **GitHub Copilot** (VS Code or CLI) into a fast, parallel, spec-driven SDLC for a small team on a deadline. One **orchestrator agent** hands out the work. **Any number of worker agents** do it, several per machine if you like. The reference setup is a 6-person team on 6 Windows machines.
 
 You write the plan once as **[OpenSpec](https://github.com/Fission-AI/OpenSpec) changes**, and every task group becomes a GitHub issue. The orchestrator assigns issues and reviews to idle workers. The workers build, open PRs, review and merge **each other's** PRs. Humans make the decisions: they agree the contracts and answer the questions workers park for them.
 
@@ -49,7 +49,7 @@ flowchart LR
 | Thing | Location | Who writes it |
 |-------|----------|---------------|
 | Problem, demo script, scope, stack, lanes | `openspec/config.yaml` → `context:` | `kickoff` skill |
-| Rules every agent follows when writing specs and tasks | `openspec/config.yaml` → `rules:` | the kit (don't edit during the event) |
+| Rules every agent follows when writing specs and tasks | `openspec/config.yaml` → `rules:` | the kit (don't edit mid-project) |
 | One vertical slice: why, requirements, **API contracts**, tasks | `openspec/changes/<id>/` | `kickoff` / `plan-feature` |
 | The current, merged behavior of the system | `openspec/specs/<capability>/spec.md` | `openspec archive` |
 | The backlog and its state | GitHub issue and PR labels | the orchestrator (`tick`), plus workers for their own PRs |
@@ -185,10 +185,10 @@ Everything about **setting up and running** the kit lives in `docs/`, not in thi
 
 | You want to… | Read |
 |---|---|
-| Add the kit to your own project, with no cloning of this repo: `npx -y github:KKogaa/hackathon-sdlc-kit` | [docs/setup/repo.md](docs/setup/repo.md) |
+| Add the kit to your own project, with no cloning of this repo: `npx -y github:KKogaa/specflow` | [docs/setup/repo.md](docs/setup/repo.md) |
 | Set up your machine, by profile (every machine, repo owner, conductor, worker), and see the 6-machine layout | **[docs/setup/](docs/setup/README.md)** |
 | Know what to do during the day: kickoff, build loop, final 2 hours | [docs/playbook.md](docs/playbook.md) |
-| Add a feature, file a bug, reprioritize or cancel mid-hackathon | [docs/changing-the-plan.md](docs/changing-the-plan.md) |
+| Add a feature, file a bug, reprioritize or cancel mid-project | [docs/changing-the-plan.md](docs/changing-the-plan.md) |
 
 ---
 
@@ -225,7 +225,7 @@ Copilot reads skill descriptions and loads the right one automatically, and the 
 | `/plan <feature>` | conductor | New feature → OpenSpec change → spec PR, in VS Code. Or just ask the orchestrator |
 | `/decide` | conductor | Walk through the questions workers parked |
 | `/standup` | anyone | Team status to paste in the chat |
-| `/demo` | conductor | Submission and demo prep |
+| `/demo` | conductor | Demo prep |
 | `/opsx-*` | anyone | OpenSpec's own commands (propose, apply, archive, explore…) |
 
 Prompt files are a VS Code feature. In Copilot CLI, pick the agent with `/agent conductor` (or `copilot --agent conductor`) and ask in plain words, for example *"use the kickoff skill: we're building …"*.
@@ -277,7 +277,7 @@ The `check` skill runs `openspec validate --all --strict`, then the Install, Lin
 | Path | Purpose |
 |------|---------|
 | `docs/setup/` | Setup, one page per machine profile: every machine, repo owner, conductor, worker |
-| `docs/playbook.md`, `docs/changing-the-plan.md` | Running the day, and changing scope mid-event |
+| `docs/playbook.md`, `docs/changing-the-plan.md` | Running the day, and changing scope mid-project |
 | `openspec/config.yaml` | Project brief, plus the rules that make agents write issue-ready tasks |
 | `openspec/changes/`, `openspec/specs/` | Planned changes, and the merged spec of the system |
 | `.github/agents/` | Custom agents (VS Code and Copilot CLI): `orchestrator` (exactly one), `worker` (any number), the specialists `frontend` (design included), `backend` and `reviewer`, and `conductor` |
@@ -293,7 +293,7 @@ The `check` skill runs `openspec validate --all --strict`, then the Install, Lin
 
 ### Compatibility
 
-At the hackathon **every teammate is on Windows**. That is the only platform the kit has to work on. Linux is only where the kit itself is developed.
+The reference team is **all on Windows**. That is the only platform the kit has to work on. Linux is only where the kit itself is developed.
 
 | Windows, any shell (PowerShell, CMD, Git Bash) | |
 |---|---|

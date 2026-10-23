@@ -8,7 +8,7 @@ description: Push the current branch and open a well-described pull request link
 1. **Pre-flight**
    - Everything is committed. Never commit secrets or `.env` files.
    - The OpenSpec task group's boxes are ticked in `openspec/changes/<id>/tasks.md`.
-   - `node scripts/orchestrate.mjs rebase`, then `node scripts/orchestrate.mjs check`, and it passes. If the diff is over roughly 400 changed lines, say so in the PR and suggest how to split it: big PRs are where hackathon merge hell comes from.
+   - `node scripts/orchestrate.mjs rebase`, then `node scripts/orchestrate.mjs check`, and it passes. If the diff is over roughly 400 changed lines, say so in the PR and suggest how to split it: big PRs are where merge hell comes from.
 
 2. **Write the body** to `.orchestrate/pr-body.md` with your file tool, following `.github/pull_request_template.md`:
    - **OpenSpec**: the change and task group, for example `add-items` group 2

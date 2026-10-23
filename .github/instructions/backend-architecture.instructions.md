@@ -5,7 +5,7 @@ description: Pragmatic hexagonal architecture for the backend, whichever stack. 
 
 # Backend architecture: pragmatic hexagonal
 
-The domain and the use cases sit in the middle and know nothing about HTTP, the database or the LLM provider. Those are **adapters** that plug into **ports**. *Pragmatic* means: only the ports and layers that earn their place in a hackathon. The stack files (`fastify` or `quarkus`) say how each piece looks in that framework.
+The domain and the use cases sit in the middle and know nothing about HTTP, the database or the LLM provider. Those are **adapters** that plug into **ports**. *Pragmatic* means: only the ports and layers that earn their place in a time-boxed project. The stack files (`fastify` or `quarkus`) say how each piece looks in that framework.
 
 ## Layout: by feature first, then by layer
 

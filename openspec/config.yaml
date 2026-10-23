@@ -8,12 +8,12 @@ githubCopilot:
 # Keep it to about one page. API contracts do NOT go here: they live in each change's
 # design.md and specs/, and in openspec/specs/ once archived.
 context: |
-  Time-boxed hackathon project: 6 people, each running a Copilot agent in VS Code, working in parallel.
+  Time-boxed project: 6 people, each running a Copilot agent in VS Code, working in parallel.
   Optimize for a working demo and for avoiding merge conflicts.
 
   Problem: <who has what problem, in one or two sentences>
 
-  Demo script (what the judges must see working):
+  Demo script (what the audience must see working):
     1. <step>
     2. <step>
     3. <step>

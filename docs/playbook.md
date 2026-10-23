@@ -1,10 +1,10 @@
-# Hackathon playbook
+# Playbook
 
 What the team does, hour by hour, once every machine is set up ([setup/](setup/README.md)).
 
 ```mermaid
 timeline
-    title A hackathon day
+    title A build day
     Hour 0 (30 min) : Conductor runs /kickoff
                     : Team reviews the spec PR and agrees the Contracts
                     : Merge → start the orchestrator → issues appear
@@ -13,7 +13,7 @@ timeline
     Build loop      : Orchestrator assigns · workers build, review and merge
                     : Conductor answers the decisions the orchestrator surfaces
     Last 2 hours    : /demo
-                    : Feature freeze 1 h before judging (fix PRs only)
+                    : Feature freeze 1 h before the demo (fix PRs only)
                     : ship-release tags v1.0.0
 ```
 
@@ -22,7 +22,7 @@ timeline
 1. The conductor runs, in VS Code Copilot Chat:
    > `/kickoff an AI study buddy for Spanish learners`
 
-   The agent asks for anything it's missing in one message. Then it proposes the **must-haves** (what the demo needs end to end) and a numbered list of **opportunities** it found (a wow moment, sponsor tech, a twist, polish), each with its cost, risk and a recommendation. Reply with the numbers to include. Then it:
+   The agent asks for anything it's missing in one message. Then it proposes the **must-haves** (what the demo needs end to end) and a numbered list of **opportunities** it found (a wow moment, a twist, polish), each with its cost, risk and a recommendation. Reply with the numbers to include. Then it:
    - fills the project brief in `openspec/config.yaml`
    - creates a `scaffold` change, reserved for the conductor with `assignee=`, plus 4–8 vertical-slice changes for the must-haves and one per approved opportunity (p1/p2, so they can be cut without breaking the demo), each with a **Contracts** section in `design.md`
    - runs `openspec validate --all --strict` and previews the backlog with `node scripts/orchestrate.mjs sync --dry-run`
@@ -41,5 +41,5 @@ timeline
 ## Final 2 hours
 
 - `/demo` produces the README, `docs/DEMO.md`, a seed script, and a list of demo-path risks.
-- Feature freeze 1 hour before judging: only `fix:` PRs on the demo path get merged. Stop the workers once the board is empty, then the orchestrator.
+- Feature freeze 1 hour before the demo: only `fix:` PRs on the demo path get merged. Stop the workers once the board is empty, then the orchestrator.
 - *"Cut the demo release"* (the `ship-release` skill) tags v1.0.0, deploys, and smoke-tests.

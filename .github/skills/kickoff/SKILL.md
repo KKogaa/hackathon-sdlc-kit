@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: Turn a hackathon idea into an OpenSpec project brief, one OpenSpec change per MVP slice (with API contracts and task groups), and a spec PR that becomes a GitHub issue backlog when it merges. Use at the very start of the hackathon, or when the user says "kickoff", "we're building X", or "set up the backlog".
+description: Turn a project idea into an OpenSpec project brief, one OpenSpec change per MVP slice (with API contracts and task groups), and a spec PR that becomes a GitHub issue backlog when it merges. Use at the very start of the project, or when the user says "kickoff", "we're building X", or "set up the backlog".
 ---
 
 # Kickoff: idea → OpenSpec → backlog
@@ -11,22 +11,22 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
 
 1. **Clarify the idea.** If the user hasn't stated them, ask in ONE message for:
    - The problem and who has it (1 sentence each)
-   - The demo moment: what the judges must see working
-   - Hard constraints: the stack the team knows, required APIs or sponsor tech, the deadline
+   - The demo moment: what the audience must see working
+   - Hard constraints: the stack the team knows, required APIs or tech, the deadline
    - The backend stack: **TypeScript + Fastify** (the default: one language across both lanes, contracts shared as Zod schemas) or **Java + Quarkus** (if the team is stronger in Java). The frontend is React + TypeScript. The kit ships coding standards for exactly these, so another stack means writing its standards first.
-   - How it's judged, if they know: criteria, categories, sponsor prizes
+   - How success is measured, if they know: who the demo is for and what they care about
 
-1b. **Must-haves, then opportunities.** Don't just transcribe the idea: look for what would make it win. Send ONE message with two parts, then wait for the answer. This is the only stop before the spec PR.
+1b. **Must-haves, then opportunities.** Don't just transcribe the idea: look for what would make it stand out. Send ONE message with two parts, then wait for the answer. This is the only stop before the spec PR.
    - **Must-haves.** The smallest set of user actions that makes the demo script work end to end. These become the p0 slices. List them in one line each, so the user can confirm or cut.
    - **Opportunities.** 4–8 ideas the user didn't ask for, numbered. Be creative, and make at least one of them ambitious. Look at them from different angles:
-     - the demo's *wow* moment: something live, visual or surprising the judges remember
-     - the judging criteria and sponsor prizes: using the sponsor's tech in a way that isn't obvious
+     - the demo's *wow* moment: something live, visual or surprising the audience remembers
+     - the success criteria: what the audience values most, and how to show it
      - the user's real workflow around the product: what they do just before and just after (share, import, export, notify, collaborate)
      - a twist that makes it different from the obvious version of this idea
      - polish that makes it feel real: onboarding, seed data, empty states, mobile
-   - For each opportunity give: a one-line pitch, why judges or users care, the cost (about how many task groups, and which lanes), the risk (new API, secrets, unknown tech), and your recommendation (**include**, **maybe** or **skip**). End with the question, for example *"Reply with the numbers to include, e.g. `1, 3, 5`, and any must-have to cut or change."*
+   - For each opportunity give: a one-line pitch, why the audience or users care, the cost (about how many task groups, and which lanes), the risk (new API, secrets, unknown tech), and your recommendation (**include**, **maybe** or **skip**). End with the question, for example *"Reply with the numbers to include, e.g. `1, 3, 5`, and any must-have to cut or change."*
    - Then, from the answer:
-     - each approved opportunity becomes its own change (or a group inside a must-have change, if it's tiny), with `priority=p1` or `p2`. Must-have groups never depend on an opportunity, so any of them can be cut mid-event without breaking the demo.
+     - each approved opportunity becomes its own change (or a group inside a must-have change, if it's tiny), with `priority=p1` or `p2`. Must-have groups never depend on an opportunity, so any of them can be cut mid-project without breaking the demo.
      - the ideas not taken go in the brief's **Later** list, where `/plan` can pick them up if the team gets ahead.
    - Size it to the team: about 6 workers × the hours until the feature freeze. Must-haves should fit comfortably in roughly the first half of that. If the approved list doesn't fit, say so and suggest what to drop.
 
@@ -52,15 +52,15 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    - Java + Quarkus: delete `fastify`. Keep `typescript` (the frontend uses it). Plan the frontend's API types to be generated from Quarkus' OpenAPI, instead of shared Zod schemas.
    - Don't rewrite the standards. If this project needs a different choice (another database library, a styling library), add it to the bottom of the relevant file under `## This project`.
 
-4c. **Write the project's `README.md`**, for people (teammates now, judges later). If there is none, or it is still the kit's own (it starts with `# Hackathon SDLC Kit`), write a new one. If the project already has its own, add only the missing sections. Keep it short:
+4c. **Write the project's `README.md`**, for people (teammates now, the demo audience later). If there is none, or it is still the kit's own (it starts with `# Specflow`), write a new one. If the project already has its own, add only the missing sections. Keep it short:
    - name and one-line pitch, then the problem in 1–2 sentences
    - the demo script (the same 3–5 steps as the brief)
-   - the tech stack, with sponsor tech called out
+   - the tech stack
    - **Project structure**: the top-level folders with one line each, and a link to the lane ownership in `AGENTS.md#project-structure` (don't copy the full map, it would drift)
    - **Getting started**: point to the Install and Dev rows of the Commands table in `AGENTS.md`, which `scaffold` fills in
    - **How we work**: the project board's link (in `orchestrate.mjs status`), and links to `docs/playbook.md` and `docs/setup/README.md`
 
-   `demo-prep` turns it into the judges' version at the end.
+   `demo-prep` turns it into the demo version at the end.
 
 4d. **Respect what the project already has.** The kit is often added to a repo the team created by hand, sometimes already with a framework (for example from `create-next-app`, `vite` or `fastapi`). Look at the repo first (`package.json`, `pyproject.toml`, existing folders). If a stack is already there:
    - take it as decided, and put it in the brief's tech stack

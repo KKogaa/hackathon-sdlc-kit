@@ -1255,7 +1255,7 @@ const LABELS = [
   ["type:bug", "d73a4a", "Something is broken"],
   ["type:chore", "c5def5", "Tooling, config, deps"],
   ["type:docs", "0075ca", "Documentation"],
-  ["type:feature-request", "a2eeef", "Asked for mid-hackathon: waiting for the conductor to plan it"],
+  ["type:feature-request", "a2eeef", "Asked for mid-project: waiting for the conductor to plan it"],
   ["size:S", "bfdadc", "< 1 hour"],
   ["size:M", "7fc8c4", "1-2 hours"],
   ["size:L", "e99695", "Too big: split it"],
