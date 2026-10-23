@@ -99,6 +99,7 @@ stateDiagram-v2
     [*] --> blocked: sync (has depends)
     blocked --> ready: every "Depends on" issue closed
     ready --> in_progress: next → claim
+    in_progress --> blocked: needs another issue first
     in_progress --> decision: worker needs a human
     decision --> ready: conductor answers (/decide)
     in_progress --> needs_review: PR opened
@@ -142,9 +143,9 @@ stateDiagram-v2
 3. Create the labels: `bash scripts/setup-labels.sh`
 4. **Protect `main`**: require a pull request with 1 approval, and turn on squash merge plus auto-delete of head branches. Workers approve each other's PRs under their own accounts, so it never needs a human click. Don't require status checks: there is no CI, because `scripts/check.sh` runs locally.
 5. **Every teammate**:
-   - installs `gh` and runs `gh auth login`. A worker claims work as you.
+   - installs Node 20+ and `gh`, then runs `gh auth login`. A worker claims work as you.
    - installs OpenSpec: `npm install -g @fission-ai/openspec@1.14.3`
-   - opens the repo in VS Code with Copilot Chat. The workspace settings in `.vscode/settings.json` turn on agent skills, raise the agent's request limit, and auto-approve the team's routine terminal commands (`git`, `gh`, `openspec`, tests, the scripts), so the worker doesn't stop for a click on each one. Anything else still asks.
+   - opens the repo in VS Code with Copilot Chat. The workspace settings in `.vscode/settings.json` turn on agent skills, raise the agent's request limit, and auto-approve the team's routine terminal commands (`git`, `gh`, `openspec`, tests, the scripts), so the worker doesn't stop for a click on each one. Anything else still asks. If your worker still asks before every command, check those settings under *Settings → Chat*: setting names change between VS Code releases.
    - optional: installs [Copilot CLI](https://github.com/github/copilot-cli) to run the [autopilot worker](#copilot-cli-autopilot-optional)
 
 ---
@@ -157,8 +158,8 @@ timeline
     Hour 0 (30 min) : Conductor runs /kickoff
                     : Team reviews the spec PR and agrees the Contracts
                     : Merge → orchestrate.mjs sync → issues appear
-    Hour 0–1        : Conductor drives scaffold (everything depends on it)
-                    : Others start /work in their lane (workers idle until scaffold merges)
+    Hour 0–1        : Conductor builds scaffold (everything depends on it)
+                    : Others start /work (workers review scaffold PRs, otherwise idle)
     Build loop      : 6 workers claim, build, review and merge
                     : Conductor runs /decide and /standup
     Last 2 hours    : /demo
@@ -177,13 +178,13 @@ timeline
    - runs `openspec validate --all --strict` and previews the backlog with `node scripts/orchestrate.mjs sync --dry-run`
    - opens the spec PR `docs(spec): MVP spec and contracts`
 2. **The whole team reviews the spec PR together**, mostly the `## Contracts` sections. This is the most important review of the day, because six workers will build against these shapes in parallel.
-3. Merge it, then run `node scripts/orchestrate.mjs sync`. The issues appear with their dependencies linked.
-4. The conductor drives `scaffold`: repo skeleton, lint/test/build wired into `scripts/check.sh`, the **Commands** table in `AGENTS.md`, hello world deployed. Everyone else starts their worker. Workers sit `idle` until `scaffold` merges, then the whole board unblocks at once.
+3. Merge it, then run `node scripts/orchestrate.mjs sync`. The issues appear with their dependencies linked. The kickoff agent then assigns every `scaffold` issue to the conductor, so no worker takes them.
+4. The conductor builds `scaffold` interactively (*"implement #1"*): repo skeleton, lint/test/build wired into `scripts/check.sh`, the **Commands** table in `AGENTS.md`, hello world deployed. Everyone else can start their worker now. Every other issue depends on `scaffold`, so workers sit `idle` (or review scaffold PRs) until it merges. Then the whole board unblocks at once.
 
 ### During the build
 
 - **Every ~45 minutes, glance at your worker.** If its chat has grown long, start a new chat and run `/work <lane>` again. A fresh context keeps it fast and focused, and it resumes anything it had claimed.
-- **Conductor:** `/decide` whenever `status:needs-decision` issues appear (each one is an idle worker's question), and `/standup` every couple of hours. Post the standup in the team chat.
+- **Conductor:** `/decide` whenever `status:needs-decision` issues appear (each one is work nobody can finish until it's answered), and `/standup` every couple of hours. Post the standup in the team chat.
 - **Lanes running dry?** The standup flags it. Workers already spill over into other lanes, but you can also restart one on a busier lane.
 
 ### Final 2 hours
@@ -235,7 +236,7 @@ bash scripts/worker.sh backend              # every issue
 bash scripts/worker.sh backend --auto-only  # only agent:auto issues, e.g. when nobody is watching
 ```
 
-Each unit of work gets a **fresh** `copilot -p` session with the `worker` agent, so the context never fills up and it can run all day in a terminal. It runs with `--allow-all-tools` (minus force-push, `rm -rf` and repo deletion), so run it only in your clone of this repo. Logs go to `.worker-logs/`. Stop it with Ctrl-C.
+Each unit of work gets a **fresh** `copilot -p` session with the `worker` agent, so the context never fills up and it can run all day in a terminal. It runs with `--allow-all-tools`, except `rm` and `gh repo`, so it never stops to ask. Run it only in your clone of this repo, and keep `main` protected: that's what blocks a force-push to `main`. Logs go to `.worker-logs/`. Stop it with Ctrl-C.
 
 **Run one worker per teammate.** Claims are made under your `gh` login, so two workers on the same account would look like one person to the orchestrator.
 
@@ -251,7 +252,7 @@ Each unit of work gets a **fresh** `copilot -p` session with the `worker` agent,
 | `/demo` | conductor | Submission and demo prep |
 | `/opsx-*` | anyone | OpenSpec's own commands (propose, apply, archive, explore…) |
 
-Copilot CLI has no prompt files. Ask in plain words instead (*"use the kickoff skill…"*), or use `--agent worker` / `--agent conductor`.
+Prompt files are a VS Code feature. In Copilot CLI, pick the agent with `/agent conductor` (or `copilot --agent conductor`) and ask in plain words, for example *"use the kickoff skill: we're building …"*.
 
 ---
 
@@ -266,7 +267,7 @@ flowchart LR
     check --> pr{{"Spec PR<br/>docs(spec): plan &lt;name&gt;"}}
     pr -- "lane owners look · conductor merges" --> issues[("New issues<br/>on the next sync")]
 
-    bug(["Small bug or tweak<br/>(no requirement changes)"]) --> template["Bug / Task issue template<br/>+ status:ready"]
+    bug(["Small bug or tweak<br/>(no requirement changes)"]) --> template["Bug / Task issue template<br/>(adds status:ready)"]
     template --> issues
 ```
 

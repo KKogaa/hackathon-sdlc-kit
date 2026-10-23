@@ -19,9 +19,10 @@ while true; do
   echo "$(date +%H:%M) $next"
   [[ "$next" == *'"idle"'* ]] && continue
 
+  # Copilot CLI matches shell rules on the command and its first subcommand only, so flags
+  # can't be denied here. Force-pushes to main are stopped by branch protection instead.
   copilot --agent worker \
-    --allow-all-tools --deny-tool 'shell(git push --force)' --deny-tool 'shell(git push -f)' \
-    --deny-tool 'shell(rm -rf)' --deny-tool 'shell(gh repo delete)' \
+    --allow-all-tools --deny-tool 'shell(rm)' --deny-tool 'shell(gh repo)' \
     -p "You are the $lane lane worker. orchestrate.mjs already claimed this unit of work for you: $next. Do exactly that one unit, following your agent instructions, then stop." \
     2>&1 | tee ".worker-logs/$(date +%Y%m%d-%H%M%S).log"
 done

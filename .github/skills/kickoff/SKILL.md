@@ -34,7 +34,14 @@ Goal: within ~30 minutes, the 6 teammates' worker agents can each claim `status:
 
 8. **Open the spec PR** with the `open-pr` skill, titled `docs(spec): MVP spec and contracts`. This is the moment the team reviews and agrees the contracts together.
 
-9. **After it merges**, run `node scripts/orchestrate.mjs sync` to create every issue and link the dependencies right away. (Any worker's loop would also do it on its next turn.) Then tell the team to start their workers: `/work <lane>` in VS Code.
+9. **After it merges**, run `node scripts/orchestrate.mjs sync` to create every issue and link the dependencies right away. (Any worker's loop would also do it on its next turn.)
+   Then **assign every `scaffold` issue to the conductor**, so no worker claims them. Workers only take unassigned issues.
+   ```bash
+   gh issue list --state open --limit 100 --json number,title \
+     --jq '.[] | select(.title | startswith("[scaffold] ")) | .number' \
+     | xargs -I{} gh issue edit {} --add-assignee @me
+   ```
+   Then tell the team to start their workers: `/work <lane>` in VS Code. They review PRs and wait until scaffold merges and the board unblocks.
 
 10. **Print the plan**: a table of change, group, lane, size, owner (interactive, or `agent:auto` for any worker) and dependencies, plus who takes `scaffold`.
 
