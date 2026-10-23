@@ -13,6 +13,10 @@ gh pr list --state open --json number,title,author,reviewDecision,statusCheckRol
 gh issue list --label "status:in-progress" --json number,title,assignees,updatedAt
 gh issue list --label "status:blocked" --json number,title,assignees
 gh issue list --label "status:ready" --json number,title,labels
+gh issue list --label "status:needs-decision" --json number,title
+gh pr list --state open --label "pr:changes" --json number,title,author
+node scripts/orchestrate.mjs status        # board + per-change progress
+openspec list --json                        # task progress per OpenSpec change
 gh api repos/{owner}/{repo}/milestones --jq '.[] | {title, open_issues, closed_issues, due_on}'
 ```
 
@@ -23,10 +27,12 @@ gh api repos/{owner}/{repo}/milestones --jq '.[] | {title, open_issues, closed_i
 
 ✅ Shipped (last 3h)
 ⏳ In progress: issue, owner, minutes since last update (flag anything stale >60 min)
-👀 PRs needing review: oldest first, plus CI status
-🚧 Blocked: issue, reason, what unblocks it
-⚠️ Demo risks: p0 issues not started, red CI on main, contract conflicts
-👉 Next up: top 3 ready issues, with a suggested owner for each (human or @copilot)
+👀 PRs: waiting for review (pr:needs-review, oldest first) and sent back (pr:changes)
+🧭 OpenSpec: each active change, groups closed / total
+🙋 Needs a decision: issues workers parked for a human (status:needs-decision). These stall a worker, so list them first in the chat post
+🚧 Blocked: issue, and what unblocks it
+⚠️ Demo risks: p0 issues not started, `scripts/check.sh` failing on main, contract conflicts
+👉 Lanes: per lane, ready issue count. Flag a lane with 0 ready while others have many (move a worker there with /work <lane>)
 ```
 
 Keep it scannable and short enough to paste into the team chat.

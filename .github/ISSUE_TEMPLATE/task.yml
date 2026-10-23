@@ -6,7 +6,7 @@ body:
     id: context
     attributes:
       label: Context
-      description: Why this exists. Link the relevant SPEC section.
+      description: Why this exists. Link the OpenSpec change or spec (openspec/changes/<id> or openspec/specs/<capability>).
     validations:
       required: true
   - type: textarea

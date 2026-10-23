@@ -1,34 +1,55 @@
 schema: spec-driven
 githubCopilot:
-  cloudAgent: true
+  cloudAgent: false
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Project brief. The `kickoff` skill fills this in, replacing the <...> placeholders.
+# OpenSpec injects it into every proposal, design, tasks and apply instruction, so
+# every worker agent sees the problem, the demo and the stack.
+# Keep it to about one page. API contracts do NOT go here: they live in each change's
+# design.md and specs/, and in openspec/specs/ once archived.
+context: |
+  Time-boxed hackathon project: 6 people, each running a Copilot agent in VS Code, working in parallel.
+  Optimize for a working demo and for avoiding merge conflicts.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Problem: <who has what problem, in one or two sentences>
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Demo script (what the judges must see working):
+    1. <step>
+    2. <step>
+    3. <step>
+
+  MVP scope
+    In:  <...>
+    Out (explicitly): <...>
+
+  Tech stack: <layer: choice (why)>, ...
+  Architecture: <components and how they talk, e.g. "Next.js UI -> FastAPI -> Postgres; FastAPI -> OpenAI">
+  Lanes (GitHub `area:` labels): frontend, backend, ai, infra
+
+rules:
+  proposal:
+    - Keep it under 300 words and list what is explicitly out of scope.
+    - One change is one vertical slice (UI + API + data for one user action) or one capability. Never a whole layer.
+  specs:
+    - Every requirement has at least one WHEN/THEN scenario. Write scenarios so each one maps directly to a test.
+    - Every HTTP endpoint gets a requirement that names its method, path, request body and response status and body.
+  design:
+    - Start with a "## Contracts" section giving the exact API shapes (method, path, request, response, errors), data model fields and new env vars. Frontend and backend build against this section in parallel, so make it complete and unambiguous.
+    - Prefer the simplest thing that works for a demo. No speculative abstractions.
+  tasks:
+    - Each "## N. <group>" is exactly one GitHub issue and one PR. It should take 1-2 hours and change under 400 lines.
+    - Directly under each group heading, add one metadata comment line that `scripts/orchestrate.mjs` turns into an issue. Format, `agent=auto` and `depends=` being optional - `<!-- issue: area=backend size=M priority=p0 agent=auto depends=1,other-change:2 files=src/api/items.ts,src/db/schema.ts -->`
+    - area is one of frontend|backend|ai|infra. size is S (<1h) or M (1-2h); split anything bigger. priority is p0 (on the demo path), p1 or p2.
+    - Set agent=auto only when the group is unambiguous, has clear acceptance criteria in the specs and needs no human judgement or secrets. Unattended worker agents (scripts/worker.sh --auto-only) only take these.
+    - depends lists group numbers in this change, or `<change>:<N>` for another change. Leave it empty whenever you can - fewer dependencies means more parallel work.
+    - Two groups that can run at the same time must not edit the same files. If they must, make one depend on the other.
+    - The last task in every group is a test task that covers the relevant spec scenarios.
+
+operations:
+  apply:
+    guidance:
+      - When working from a GitHub issue, implement ONLY the task group that issue names, and tick only that group's checkboxes. Other groups belong to other people or agents.
+      - Don't change a contract from design.md or the spec deltas unless the issue says to. If you must, update the change's design.md and spec deltas in the same PR and flag it in the PR body.
+  archive:
+    guidance:
+      - Archive only when every issue for the change is closed. Run `bash scripts/check.sh` after archiving.

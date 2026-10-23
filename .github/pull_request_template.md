@@ -1,5 +1,7 @@
 Closes #
 
+**OpenSpec:** change `<id>`, task group `<n>` (or "none")
+
 ## What
 -
 
@@ -15,7 +17,8 @@ Closes #
 <!-- Required for UI changes -->
 
 ## Risk or notes
-<!-- Contract or schema changes, new env vars, migrations. Write "none" if none. -->
+<!-- Contract changes (with the design.md / spec delta update), new env vars, migrations. Write "none" if none. -->
 
-- [ ] Lint, test and build pass locally
-- [ ] `docs/SPEC.md` is updated if any contract changed
+- [ ] `bash scripts/check.sh` passes (OpenSpec validate + lint, test, build)
+- [ ] Only my task group's boxes are ticked in `openspec/changes/<id>/tasks.md`
+- [ ] If a contract changed, the change's `design.md` and spec deltas are updated in this PR

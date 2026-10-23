@@ -5,7 +5,7 @@ description: Write fast, focused tests for new or changed code using the project
 
 # Write tests
 
-Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim for confidence that the main flows don't break when five people merge at once.
+Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim for confidence that the main flows don't break when six workers merge at once.
 
 ## Steps
 
@@ -16,11 +16,11 @@ Hackathon testing philosophy: **protect the demo path**. Skip 100% coverage. Aim
    - None yet: add the stack's default (vitest for TS, pytest for Python) and a `test` script.
 2. Put tests next to the existing tests and match their naming and style.
 3. For each change, cover:
-   - **Happy path**: the acceptance criteria from the issue
+   - **Spec scenarios**: each WHEN/THEN scenario in the OpenSpec change's `specs/` that your task group implements becomes one test, named after the scenario
    - **One meaningful failure**: bad input, missing auth, or an empty state
-   - **Contract shape**: API responses match `docs/SPEC.md`
+   - **Contract shape**: API responses match the `## Contracts` in the change's `design.md`
 4. Mock external services (LLM APIs, third-party HTTP, payments). Tests must run offline and finish in seconds.
-5. Run the suite and make sure it passes. Never weaken or skip an existing test to get green. Fix the code, or flag the test as wrong in the PR.
+5. Run `bash scripts/check.sh` and make sure it passes. Never weaken or skip an existing test to get green. Fix the code, or flag the test as wrong in the PR.
 
 ## Don'ts
 

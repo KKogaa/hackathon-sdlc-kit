@@ -15,7 +15,12 @@ label "size:L"             "e99695" "Too big: split it"
 
 label "status:ready"       "0e8a16" "Ready to pick up"
 label "status:in-progress" "fbca04" "Someone is on it"
-label "status:blocked"     "b60205" "Waiting on something"
+label "status:blocked"     "b60205" "Waiting on the issues under Depends on"
+label "status:needs-decision" "d876e3" "A worker parked it: needs a human decision"
+
+label "pr:needs-review"    "0e8a16" "Waiting for a worker to review and merge"
+label "pr:reviewing"       "fbca04" "A worker is reviewing it"
+label "pr:changes"         "d93f0b" "Sent back: the author's worker fixes it next"
 
 label "priority:p0"        "b60205" "Demo-critical"
 label "priority:p1"        "d93f0b" "Important"
@@ -26,4 +31,4 @@ label "area:backend"       "1d76db" "API, services, DB"
 label "area:infra"         "6e7781" "CI, deploy, hosting"
 label "area:ai"            "8250df" "LLM, agents, prompts"
 
-label "agent:copilot"      "000000" "Well-specified: safe to assign to Copilot coding agent"
+label "agent:auto"         "000000" "Well specified: an unattended worker can finish it"

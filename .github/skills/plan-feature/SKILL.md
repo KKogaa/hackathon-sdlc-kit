@@ -1,54 +1,29 @@
 ---
 name: plan-feature
-description: Break a feature or user story into small, independently shippable GitHub issues with acceptance criteria, labels, and dependencies. Use when the user asks to plan, break down, scope, or create issues or tasks for a feature.
+description: Plan a new feature or scope change mid-hackathon as an OpenSpec change whose task groups become GitHub issues when the spec PR merges. Use when the user asks to plan, break down, scope, add a feature, or create issues or tasks for a feature.
 ---
 
-# Plan a feature into issues
+# Plan a feature
+
+Every feature goes through OpenSpec, so specs and contracts stay the single source of truth. Never create feature issues by hand: `scripts/orchestrate.mjs` creates them from `tasks.md`.
 
 ## Steps
 
-1. Read `docs/SPEC.md` and skim the codebase structure so the issues match reality.
-2. Split the feature into issues. Each issue must be:
-   - **Small**: one PR, roughly 1–2 hours, touching a limited set of files
-   - **Independent**: avoid two issues editing the same file at the same time. If they must, make the dependency explicit.
-   - **Testable**: it has concrete acceptance criteria
-3. Create each issue with the `Task` template format:
+1. Get context:
+   - `openspec list --json` and `openspec list --specs`: what's planned and what already exists
+   - The `context:` block in `openspec/config.yaml`: scope, stack, lanes
+   - Skim the codebase structure so the tasks match reality
+2. Branch: `git checkout main && git pull --ff-only && git checkout -b spec-<change-name>`
+3. Create the change with the `openspec-propose` skill (`/opsx-propose <idea>` in VS Code). If the feature modifies an existing capability, write `MODIFIED` requirements against `openspec/specs/<capability>/spec.md` instead of a new capability.
+4. Check `tasks.md` against the `rules:` in `openspec/config.yaml`:
+   - **Small**: each `## N.` group is one PR, 1–2 hours
+   - **Independent**: groups that can run in parallel don't touch the same files. Otherwise make the dependency explicit with `depends=`.
+   - **Testable**: the spec scenarios give concrete acceptance criteria
+   - **Routed**: every group has its `<!-- issue: area=... size=... priority=... -->` line, with `agent=auto` when an unattended worker could finish it
+5. `openspec validate --all --strict`, then preview with `node scripts/orchestrate.mjs sync --dry-run`.
+6. Open the spec PR with the `open-pr` skill: `docs(spec): plan <change-name>`. Workers don't review spec PRs: ask the affected lane owners to look at the Contracts, then the conductor merges it. Once it merges, the next worker loop (or `node scripts/orchestrate.mjs sync`) creates the issues, and free workers claim them.
+7. Report a table of the groups: lane, size, agent or human, dependencies.
 
-   ```bash
-   gh issue create \
-     --title "<type>: <imperative summary>" \
-     --label "type:feature,size:S,area:backend,status:ready" \
-     --milestone "MVP" \
-     --body-file /tmp/issue.md
-   ```
+## Small fixes don't need a change
 
-   Body format:
-   ```markdown
-   ## Context
-   Why this exists. Link the spec section.
-
-   ## Task
-   - [ ] Concrete step
-   - [ ] Concrete step
-
-   ## Acceptance criteria
-   - [ ] Observable behavior (e.g. `POST /api/x` returns 201 with `{id}`)
-   - [ ] Tests cover the happy path and one error case
-
-   ## Files likely touched
-   `src/...`
-
-   ## Depends on
-   #<n> (or "none")
-   ```
-
-4. Label issues with dependencies that haven't merged yet as `status:blocked` instead of `status:ready`.
-5. Add `agent:copilot` when the issue is unambiguous enough for the Copilot coding agent to do alone.
-6. Report back with a table of the created issues and their dependency order.
-
-## Label reference
-
-- type: `type:feature` `type:bug` `type:chore` `type:docs`
-- size: `size:S` (<1h) `size:M` (1–2h) `size:L` (split it!)
-- area: `area:frontend` `area:backend` `area:infra` `area:ai`
-- priority: `priority:p0` (demo-critical) `priority:p1` `priority:p2`
+A bug or a tweak that doesn't change any requirement uses the **Bug** or **Task** issue template directly. Add `status:ready` (and `agent:auto` if it is unambiguous), and the next free worker claims it.
