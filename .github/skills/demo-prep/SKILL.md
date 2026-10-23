@@ -16,7 +16,7 @@ description: Prepare the hackathon submission: a polished README, demo script, p
    - Tech stack, with any sponsor tech called out
    - Run locally in at most 3 commands
    - Team members
-   - How it was built: mention the agentic workflow (OpenSpec specs → 6 Copilot worker agents claiming, building and reviewing in parallel), since judges like this
+   - How it was built: mention the agentic workflow (OpenSpec specs → one orchestrator agent assigning work → many Copilot worker agents building and cross-reviewing in parallel), since judges like this
 
 2. **`docs/DEMO.md`**: a 2–3 minute script:
    - Hook (15s): the problem, made relatable

@@ -1,6 +1,10 @@
 {
   // Skills in .github/skills, custom agents in .github/agents and prompts in .github/prompts.
   "chat.useAgentSkills": true,
+  // New files get LF, so they match the repo (.gitattributes) on Windows.
+  "files.eol": "\n",
+  // Workers hand each unit to a specialist custom agent (frontend, backend, reviewer) as a subagent.
+  "chat.customAgentInSubagent.enabled": true,
   // Workers run for hours: don't stop after a few dozen tool calls.
   "chat.agent.maxRequests": 1000,
   // Let workers run the team's routine commands without a click each time.
@@ -11,9 +15,8 @@
     "/^gh (issue|pr|api|repo view|label list|auth status)\\b/": true,
     "/^gh pr merge\\b/": false,
     "/^node scripts\\/orchestrate\\.mjs\\b/": true,
-    "/^bash scripts\\/(check|setup-labels)\\.sh\\b/": true,
     "/^openspec\\b/": true,
-    "/^(npm (ci|install|test|run)|npx (vitest|jest|tsc|eslint|prettier))\\b/": true,
+    "/^(npm (ci|install|test|run)|npx (-y @fission-ai\\/openspec@[\\d.]+|vitest|jest|tsc|eslint|prettier))\\b/": true,
     "/^(uv|uvx|pytest|ruff)\\b/": true,
     "/^(ls|cat|head|tail|grep|find|wc|pwd|echo|mkdir|touch|cp|mv)\\b/": true
   }

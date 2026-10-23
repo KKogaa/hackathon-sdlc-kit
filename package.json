@@ -1,5 +1,10 @@
 {
   "name": "create-hackathon-sdlc-kit",
   "version": "0.1.0",
-  "files": [".github/", ".vscode/", "openspec/", "scripts/", "bin/", ".env.example", ".gitignore", "AGENTS.md", "README.md"]
+  "description": "Spec-driven, parallel SDLC for a 6-person hackathon team on GitHub Copilot",
+  "type": "module",
+  "repository": "github:KKogaa/hackathon-sdlc-kit",
+  "bin": { "create-hackathon-sdlc-kit": "bin/create.mjs" },
+  "files": [".github/", ".vscode/", "docs/", "openspec/", "scripts/", "bin/", ".env.example", ".gitattributes", ".gitignore", "AGENTS.md", "README.md"],
+  "engines": { "node": ">=18" }
 }

@@ -7,8 +7,8 @@ description: Generate a quick team status report from GitHub: what's merged, in 
 
 ## Gather the data
 
-```bash
-gh pr list --state merged --search "merged:>=$(date -u -v-3H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '3 hours ago' +%Y-%m-%dT%H:%M:%SZ)" --json number,title,author
+```
+gh pr list --state merged --limit 50 --json number,title,author,mergedAt   # keep the ones merged in the last 3 hours
 gh pr list --state open --json number,title,author,reviewDecision,statusCheckRollup,isDraft
 gh issue list --label "status:in-progress" --json number,title,assignees,updatedAt
 gh issue list --label "status:blocked" --json number,title,assignees
@@ -17,7 +17,7 @@ gh issue list --label "status:needs-decision" --json number,title
 gh pr list --state open --label "pr:changes" --json number,title,author
 node scripts/orchestrate.mjs status        # board + per-change progress
 openspec list --json                        # task progress per OpenSpec change
-gh api repos/{owner}/{repo}/milestones --jq '.[] | {title, open_issues, closed_issues, due_on}'
+gh api "repos/{owner}/{repo}/milestones" --jq '.[] | {title, open_issues, closed_issues, due_on}'
 ```
 
 ## Report format
@@ -31,7 +31,7 @@ gh api repos/{owner}/{repo}/milestones --jq '.[] | {title, open_issues, closed_i
 🧭 OpenSpec: each active change, groups closed / total
 🙋 Needs a decision: issues workers parked for a human (status:needs-decision). These stall a worker, so list them first in the chat post
 🚧 Blocked: issue, and what unblocks it
-⚠️ Demo risks: p0 issues not started, `scripts/check.sh` failing on main, contract conflicts
+⚠️ Demo risks: p0 issues not started, the `check` skill failing on main, contract conflicts
 👉 Lanes: per lane, ready issue count. Flag a lane with 0 ready while others have many (move a worker there with /work <lane>)
 ```
 

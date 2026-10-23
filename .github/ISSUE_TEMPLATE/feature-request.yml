@@ -1,0 +1,23 @@
+name: Feature request
+description: Ask for new behaviour mid-hackathon. The conductor plans it into OpenSpec work. Workers don't pick these up directly
+labels: ["type:feature-request"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should a user be able to do?
+      description: One or two sentences of demo behaviour, for example "From the list page, I can search items by name".
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Is it for the demo?
+      options: ["Yes, the demo needs it (p0)", "Important (p1)", "Nice to have (p2)"]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Out of scope, design ideas, links.

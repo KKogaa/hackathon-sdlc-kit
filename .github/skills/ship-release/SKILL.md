@@ -8,14 +8,15 @@ description: Cut a tagged release from main with an auto-generated changelog and
 ## Steps
 
 1. **Gate.** All of these must hold:
-   - `bash scripts/check.sh` passes on a fresh `main`
+   - The `check` skill passes on a fresh `main`
    - No open `priority:p0` PRs that are meant to be in this release
    - Finished OpenSpec changes are archived (`openspec list`), so `openspec/specs/` describes what you're shipping
    - The demo path works locally. Run through the demo script in the `context:` of `openspec/config.yaml`.
 
 2. **Pick a version**: use `v0.x.0` while iterating, and `v1.0.0` for the judged build.
-   ```bash
-   git checkout main && git pull --ff-only
+   ```
+   git checkout main
+   git pull --ff-only
    gh release create v<X.Y.Z> --generate-notes --title "v<X.Y.Z>: <name>"
    ```
    Release notes are generated from merged PR titles, which is why PR titles must be clean.

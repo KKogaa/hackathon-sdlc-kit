@@ -1,17 +1,14 @@
 # Hackathon SDLC Kit 🚀
 
-A GitHub template repo that turns **GitHub Copilot** (VS Code or CLI) into a fast, parallel, spec-driven SDLC for a 6-person hackathon team.
+A GitHub template repo that turns **GitHub Copilot** (VS Code or CLI) into a fast, parallel, spec-driven SDLC for a hackathon team. One **orchestrator agent** hands out the work. **Any number of worker agents** do it, several per machine if you like. The reference setup is a 6-person team on 6 Windows machines.
 
-You write the plan once as **[OpenSpec](https://github.com/Fission-AI/OpenSpec) changes**. Every task group becomes a GitHub issue. Then each of the 6 teammates starts **one worker agent** on their own machine and leaves it running. The workers claim issues, build them, open PRs, review and merge **each other's** PRs, and unblock what comes next. Humans make the decisions: they agree the contracts and answer the questions workers park for them.
+You write the plan once as **[OpenSpec](https://github.com/Fission-AI/OpenSpec) changes**, and every task group becomes a GitHub issue. The orchestrator assigns issues and reviews to idle workers. The workers build, open PRs, review and merge **each other's** PRs. Humans make the decisions: they agree the contracts and answer the questions workers park for them.
 
-No cloud agents, no GitHub Actions, no server. GitHub issues, PRs and labels are the shared state, and `scripts/orchestrate.mjs` is the coordinator every worker calls.
+No cloud agents, no GitHub Actions, no server. The shared state is GitHub itself: issues, PRs, labels, and one **Worker registry** issue. `scripts/orchestrate.mjs` reads and writes that state.
 
 - [How it works](#how-it-works)
 - [Roles](#roles)
-- [Setup](#setup-once-about-10-minutes)
-- [Hackathon playbook](#hackathon-playbook)
-- [Running a worker](#running-a-worker)
-- [Planning a new feature mid-hackathon](#planning-a-new-feature-mid-hackathon)
+- [Get started](#get-started): setup, playbook, changing the plan (in [docs/](docs/setup/README.md))
 - [Reference](#reference)
 
 ---
@@ -22,7 +19,6 @@ No cloud agents, no GitHub Actions, no server. GitHub issues, PRs and labels are
 flowchart LR
     subgraph PLAN["1 · Plan (conductor)"]
         idea([Idea]) --> kickoff["/kickoff"]
-        kickoff --> brief["openspec/config.yaml<br/>project brief"]
         kickoff --> changes["openspec/changes/&lt;slice&gt;/<br/>proposal · specs · design · tasks"]
     end
 
@@ -30,19 +26,22 @@ flowchart LR
         changes --> specPR{{"Spec PR<br/>review the Contracts"}}
     end
 
-    subgraph BUILD["3 · Build (6 workers, one per teammate)"]
-        specPR -- merge --> sync["sync<br/>1 task group = 1 issue"]
-        sync --> board[("GitHub issues")]
-        board --> next["orchestrate.mjs next<br/>claim"]
-        next --> build["implement · test · check.sh"]
-        build --> pr["PR · pr:needs-review"]
-        pr --> review["another worker reviews<br/>runs check.sh · merges"]
-        review --> main[(main)]
+    subgraph ORCH["3 · Orchestrate (1 agent, Copilot CLI)"]
+        specPR -- merge --> tick["orchestrate.mjs tick<br/>every 30s"]
+        tick --> board[("Issues + PRs")]
+        tick --> registry[("Worker registry<br/>assignments")]
     end
 
-    main -- "issue closes" --> unblock["unblock dependents"]
-    unblock --> board
-    main -- "all issues of a change closed" --> archive["archive issue<br/>specs merged into openspec/specs/"]
+    subgraph BUILD["4 · Build (N workers, 1+ per machine)"]
+        registry -- "work" --> w["worker dispatches the unit<br/>to a specialist subagent"]
+        w --> roles["frontend (incl. design) · backend<br/>(implement / fix)"]
+        roles --> pr["PR · pr:needs-review"]
+        pr -- "review assigned to<br/>another account's worker" --> merge["reviewer subagent<br/>check · squash-merge"]
+        w -- "done" --> registry
+    end
+
+    merge --> main[(main)]
+    main -- "issue closes" --> tick
 ```
 
 ### Where the truth lives
@@ -53,7 +52,10 @@ flowchart LR
 | Rules every agent follows when writing specs and tasks | `openspec/config.yaml` → `rules:` | the kit (don't edit during the event) |
 | One vertical slice: why, requirements, **API contracts**, tasks | `openspec/changes/<id>/` | `kickoff` / `plan-feature` |
 | The current, merged behavior of the system | `openspec/specs/<capability>/spec.md` | `openspec archive` |
-| Who is doing what right now | GitHub issue and PR labels and assignees | `orchestrate.mjs` |
+| The backlog and its state | GitHub issue and PR labels | the orchestrator (`tick`), plus workers for their own PRs |
+| Which workers exist, and what each one is doing | **Worker registry** issue: one heartbeat comment per worker, one assignments comment | each worker writes **only** its own comment, and the orchestrator writes **only** the assignments |
+
+**Every piece of state has exactly one writer**, so nothing can race, however many workers you add.
 
 ### From a task group to an issue
 
@@ -74,22 +76,57 @@ flowchart LR
         t --- l --- b
     end
 
-    g1 -- "orchestrate.mjs sync" --> issue
+    g1 -- "orchestrator tick (sync)" --> issue
 ```
 
-### What a worker does next
+An optional `assignee=<login>` in that comment reserves the group for one person, as the conductor does for `scaffold`.
 
-Every time a worker finishes a unit, it asks `node scripts/orchestrate.mjs next`. The orchestrator first does the housekeeping (sync new task groups into issues, unblock dependents, open archive issues), then hands back the first of these that applies, **already claimed**:
+### Lanes and specialists
+
+| Lane (`area:` label) | Specialist | Does |
+|---|---|---|
+| `area:frontend` | `frontend` | **Design and UI in one: an avid designer as well as a frontend engineer.** It builds the design system first (tokens, components, page shell, copy, guided by the `frontend-design` skill), then screens with every state, wired to the API against the Contracts |
+| `area:backend` | `backend` | API, data, LLM and external-service calls, deploy, chores. Also takes bugs and chores with no area, and archive issues |
+| any PR waiting for review | `reviewer` | Runs the checks on the PR merged with `main`, applies the lane's standards, then merges or sends it back |
+
+A worker's lane is only a **preference**. The orchestrator fills each worker's own lane first, then lets idle workers help any lane, and the worker puts on whichever specialist the unit needs. Each unit runs in a fresh subagent, so a worker can loop all day without its context filling up.
+
+### How the orchestrator assigns work
+
+Every 30 seconds, `tick` does the housekeeping: it creates issues for new task groups, unblocks dependents, and opens archive issues. Then it gives every **live, idle** worker the first of these that applies:
 
 | # | Action | When | Why this order |
 |---|--------|------|----------------|
-| 1 | `fix` | One of *my* PRs was sent back (`pr:changes`) or has a merge conflict | Finishing beats starting |
-| 2 | `resume` | An issue I claimed has no PR yet (my last session died) | Nothing stays orphaned |
-| 3 | `review` | A teammate's PR is waiting (`pr:needs-review`), oldest first | PRs never pile up |
-| 4 | `implement` | A `status:ready` issue, my lane first, then any lane, by priority | Nobody idles |
-| — | `idle` | Nothing yet: it waits and re-checks every minute | |
+| 1 | `fix` | A PR **this worker** opened was sent back (`pr:changes`) or has a merge conflict | Finishing beats starting |
+| 2 | `review` | A PR is waiting (`pr:needs-review`) that was opened by **another GitHub account**, oldest first | PRs never pile up. GitHub doesn't allow approving your own PR |
+| 3 | `implement` | A `status:ready` issue in the worker's lane, by priority. In a second pass, any lane | Lanes first, but nobody idles |
 
-**Claiming is race-safe.** A worker assigns itself, then reads the issue's event history. If another worker was assigned first, it backs off and tries the next one. Duplicate issues from two workers syncing at once are closed automatically. Every step is idempotent.
+- **Live** means the worker polled in the last 5 minutes. A worker polls every 30 seconds while it waits.
+- If a worker restarts, its unfinished assignment comes back to it.
+- If a worker goes silent for **4 hours**, the orchestrator hands its work to someone else. Before that, from **2.5 hours**, it flags the worker to the conductor.
+- `tick` refuses to run while **another orchestrator** was active in the last 2 minutes. There is only ever one writer of assignments.
+
+### One unit of work, end to end
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant W as Worker alice/hack
+    participant R as Worker registry (GitHub)
+    participant O as Orchestrator (tick)
+    participant W2 as Worker bob/hack
+
+    W->>R: work --lane backend (heartbeat)
+    O->>R: assign alice/hack → implement #14 (role frontend)
+    R-->>W: {"action":"implement","issue":14,"role":"frontend"}
+    W->>W: subagent frontend: branch from origin/main, code, tests, check, PR
+    W->>R: PR #15 "<!-- worker:alice/hack -->" + pr:needs-review · done
+    O->>R: assign bob/hack → review #15 (different account)
+    R-->>W2: {"action":"review","pr":15,"role":"reviewer"}
+    W2->>W2: subagent reviewer: check skill on the PR merged with main
+    W2->>O: reviewed 15 --merge (build ✔ tests ✔) · done
+    O->>O: #14 closed → unblock dependents → assign the next units
+```
 
 ### Issue and PR lifecycle
 
@@ -98,15 +135,17 @@ stateDiagram-v2
     [*] --> ready: sync (no depends)
     [*] --> blocked: sync (has depends)
     blocked --> ready: every "Depends on" issue closed
-    ready --> in_progress: next → claim
+    ready --> in_progress: orchestrator assigns it
     in_progress --> blocked: needs another issue first
     in_progress --> decision: worker needs a human
-    decision --> ready: conductor answers (/decide)
+    decision --> ready: conductor answers
     in_progress --> needs_review: PR opened
-    needs_review --> reviewing: another worker claims the review
-    reviewing --> changes: blocking items
-    changes --> needs_review: author's worker fixes it
-    reviewing --> closed: check.sh passes → squash-merge
+    needs_review --> reviewing: orchestrator assigns a reviewer
+    reviewing --> changes: blocking items (first review only)
+    changes --> needs_review: author fixes, or replies in the conversation
+    reviewing --> closed: builds + tests pass → squash-merge
+    reviewing --> human: second look, still red, and the reviewer can't fix it
+    human --> needs_review: a human fixes it
     closed --> [*]
 
     state "status:ready" as ready
@@ -116,162 +155,37 @@ stateDiagram-v2
     state "pr:needs-review" as needs_review
     state "pr:reviewing" as reviewing
     state "pr:changes" as changes
+    state "pr:needs-human" as human
 ```
+
+**Review policy:** builds and unit tests pass, on the PR merged with `main`, or it doesn't merge. A PR is **sent back at most once**, with a checklist listing everything. On the second look, open points are settled in the PR conversation (the reviewer agrees, or opens a follow-up issue), and the reviewer makes a red build or failing tests green itself. A PR the reviewer can't make green goes to `pr:needs-human`. Details: the `review-pr` skill.
 
 ---
 
 ## Roles
 
-| Role | Who | What they do |
-|------|-----|--------------|
-| **Conductor** | 1 person | Runs `/kickoff`, drives `scaffold` interactively, answers parked questions with `/decide`, runs `/plan` when scope changes and `/standup` every ~2 hours. Starts their own worker once `scaffold` merges. |
-| **Lane workers** | everyone | One worker each, on a lane: `frontend`, `backend`, `ai` or `infra` (two lanes get two people). A worker takes its own lane first and helps other lanes when its own is empty. |
+| Role | How many | What they do |
+|------|----------|--------------|
+| **Conductor** (a person) | 1 | Runs `/kickoff` and drives `scaffold` interactively. Runs the orchestrator, answers the decisions it surfaces, and runs `/plan` when scope changes. Usually also runs a worker once `scaffold` merges. |
+| **Orchestrator** (an agent) | exactly 1 | A Copilot CLI session on the conductor's machine (`copilot --agent orchestrator`). It assigns every unit of work, keeps the board moving, and flags what needs a human. It never writes code. |
+| **Workers** (agents) | any number | Each one is a long-running Copilot session in its own folder, with a preferred lane (`frontend` or `backend`). A worker doesn't write code itself: it hands each unit to a **specialist**. The demo has 6 machines: start with one worker per machine, and add more per machine with `worktree` if the machine and the backlog can take it. |
+| **Specialists** (agents) | one per unit | `frontend` (which is also the designer), `backend` and `reviewer`. The worker starts one as a **subagent** with a fresh context for each unit, picked by the unit's `role` (from the issue's `area:` label, or `reviewer` for reviews). Their know-how lives in the `role-frontend` (with `frontend-design`) and `role-backend` skills. |
+| **Teammates** (people) | everyone | Watch their machine's workers, approve anything a worker asks permission for, step in when one goes off track, and restart a worker when its chat gets long. |
 
-**The human's job** while their worker runs: watch it, approve anything it asks permission for, step in when it goes off track, and keep an eye on the `status:needs-decision` questions in their lane.
-
-`agent:auto` marks issues that are specified well enough to finish with **no human decisions**. Workers started with `--auto-only` (for example a CLI worker left running overnight) take only those.
-
----
-
-## Setup (once, about 10 minutes)
-
-1. **Create the repo from the template**: click *Use this template* → *Create a new repository*, or run:
-   ```bash
-   gh repo create <org>/<project> --template KKogaa/hackathon-sdlc-kit --private --clone
-   ```
-2. Add your teammates as collaborators.
-3. Create the labels: `bash scripts/setup-labels.sh`
-4. **Protect `main`**: require a pull request with 1 approval, and turn on squash merge plus auto-delete of head branches. Workers approve each other's PRs under their own accounts, so it never needs a human click. Don't require status checks: there is no CI, because `scripts/check.sh` runs locally.
-5. **Every teammate**:
-   - installs Node 20+ and `gh`, then runs `gh auth login`. A worker claims work as you.
-   - installs OpenSpec: `npm install -g @fission-ai/openspec@1.14.3`
-   - opens the repo in VS Code with Copilot Chat. The workspace settings in `.vscode/settings.json` turn on agent skills, raise the agent's request limit, and auto-approve the team's routine terminal commands (`git`, `gh`, `openspec`, tests, the scripts), so the worker doesn't stop for a click on each one. Anything else still asks. If your worker still asks before every command, check those settings under *Settings → Chat*: setting names change between VS Code releases.
-   - optional: installs [Copilot CLI](https://github.com/github/copilot-cli) to run the [autopilot worker](#copilot-cli-autopilot-optional)
+`agent:auto` marks issues that are specified well enough to finish with **no human decisions**. A worker started with `/work <lane> auto-only` takes only those, which is useful when nobody is watching it.
 
 ---
 
-## Hackathon playbook
+## Get started
 
-```mermaid
-timeline
-    title A hackathon day
-    Hour 0 (30 min) : Conductor runs /kickoff
-                    : Team reviews the spec PR and agrees the Contracts
-                    : Merge → orchestrate.mjs sync → issues appear
-    Hour 0–1        : Conductor builds scaffold (everything depends on it)
-                    : Others start /work (workers review scaffold PRs, otherwise idle)
-    Build loop      : 6 workers claim, build, review and merge
-                    : Conductor runs /decide and /standup
-    Last 2 hours    : /demo
-                    : Feature freeze 1 h before judging (fix PRs only)
-                    : ship-release tags v1.0.0
-```
+Everything about **setting up and running** the kit lives in `docs/`, not in this README:
 
-### Hour 0: Kickoff (whole team, about 30 minutes)
-
-1. The conductor runs, in VS Code Copilot Chat:
-   > `/kickoff an AI study buddy for Spanish learners`
-
-   The agent asks for anything it's missing in one message, then:
-   - fills the project brief in `openspec/config.yaml`
-   - creates a `scaffold` change plus 4–8 vertical-slice changes, each with a **Contracts** section in `design.md`
-   - runs `openspec validate --all --strict` and previews the backlog with `node scripts/orchestrate.mjs sync --dry-run`
-   - opens the spec PR `docs(spec): MVP spec and contracts`
-2. **The whole team reviews the spec PR together**, mostly the `## Contracts` sections. This is the most important review of the day, because six workers will build against these shapes in parallel.
-3. Merge it, then run `node scripts/orchestrate.mjs sync`. The issues appear with their dependencies linked. The kickoff agent then assigns every `scaffold` issue to the conductor, so no worker takes them.
-4. The conductor builds `scaffold` interactively (*"implement #1"*): repo skeleton, lint/test/build wired into `scripts/check.sh`, the **Commands** table in `AGENTS.md`, hello world deployed. Everyone else can start their worker now. Every other issue depends on `scaffold`, so workers sit `idle` (or review scaffold PRs) until it merges. Then the whole board unblocks at once.
-
-### During the build
-
-- **Every ~45 minutes, glance at your worker.** If its chat has grown long, start a new chat and run `/work <lane>` again. A fresh context keeps it fast and focused, and it resumes anything it had claimed.
-- **Conductor:** `/decide` whenever `status:needs-decision` issues appear (each one is work nobody can finish until it's answered), and `/standup` every couple of hours. Post the standup in the team chat.
-- **Lanes running dry?** The standup flags it. Workers already spill over into other lanes, but you can also restart one on a busier lane.
-
-### Final 2 hours
-
-- `/demo` produces the README, `docs/DEMO.md`, a seed script, and a list of demo-path risks.
-- Feature freeze 1 hour before judging: only `fix:` PRs on the demo path get merged. Stop the workers once the board is empty.
-- *"Cut the demo release"* (the `ship-release` skill) tags v1.0.0, deploys, and smoke-tests.
-
----
-
-## Running a worker
-
-### VS Code (default)
-
-Open Copilot Chat and run:
-
-> `/work backend`
-
-That starts the `worker` custom agent in a loop: `next` → do the unit → report one line → `next` … It keeps going until you stop it or the chat gets too long. In that case it tells you to open a new chat and run `/work` again.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant W as Your worker (VS Code)
-    participant O as orchestrate.mjs
-    participant GH as GitHub
-    participant W2 as A teammate's worker
-
-    loop until stopped
-        W->>O: next --lane backend
-        O->>GH: sync · unblock · archive (housekeeping)
-        O->>GH: claim the first of fix / resume / review / implement
-        O-->>W: {"action":"implement","issue":14}
-        W->>W: branch 14-slug, read Contracts + scenarios
-        W->>W: implement ONLY that task group, tests, tick tasks.md
-        W->>W: bash scripts/check.sh
-        W->>GH: PR "feat(api): … (#14)" + pr:needs-review
-    end
-    W2->>O: next → {"action":"review","pr":15}
-    W2->>W2: check.sh on the PR merged with main
-    W2->>GH: approve · reviewed 15 --merge
-    GH-->>O: #14 closed → dependents unblocked on the next call
-```
-
-### Copilot CLI autopilot (optional)
-
-```bash
-bash scripts/worker.sh backend              # every issue
-bash scripts/worker.sh backend --auto-only  # only agent:auto issues, e.g. when nobody is watching
-```
-
-Each unit of work gets a **fresh** `copilot -p` session with the `worker` agent, so the context never fills up and it can run all day in a terminal. It runs with `--allow-all-tools`, except `rm` and `gh repo`, so it never stops to ask. Run it only in your clone of this repo, and keep `main` protected: that's what blocks a force-push to `main`. Logs go to `.worker-logs/`. Stop it with Ctrl-C.
-
-**Run one worker per teammate.** Claims are made under your `gh` login, so two workers on the same account would look like one person to the orchestrator.
-
-### Prompts
-
-| Prompt (VS Code) | Who | What it does |
-|------------------|-----|--------------|
-| `/work <lane>` | everyone | The worker loop |
-| `/kickoff <idea>` | conductor | Idea → OpenSpec brief and changes → spec PR |
-| `/plan <feature>` | conductor | New feature → OpenSpec change → spec PR |
-| `/decide` | conductor | Walk through the questions workers parked |
-| `/standup` | anyone | Team status to paste in the chat |
-| `/demo` | conductor | Submission and demo prep |
-| `/opsx-*` | anyone | OpenSpec's own commands (propose, apply, archive, explore…) |
-
-Prompt files are a VS Code feature. In Copilot CLI, pick the agent with `/agent conductor` (or `copilot --agent conductor`) and ask in plain words, for example *"use the kickoff skill: we're building …"*.
-
----
-
-## Planning a new feature mid-hackathon
-
-Every feature goes through OpenSpec. **Don't create feature issues by hand**: workers create them from `tasks.md`.
-
-```mermaid
-flowchart LR
-    ask(["/plan search on the list page"]) --> propose["openspec-propose<br/>new change, or MODIFIED<br/>requirements on an existing spec"]
-    propose --> check["validate --strict<br/>sync --dry-run"]
-    check --> pr{{"Spec PR<br/>docs(spec): plan &lt;name&gt;"}}
-    pr -- "lane owners look · conductor merges" --> issues[("New issues<br/>on the next sync")]
-
-    bug(["Small bug or tweak<br/>(no requirement changes)"]) --> template["Bug / Task issue template<br/>(adds status:ready)"]
-    template --> issues
-```
-
-When every issue of a change is closed, the orchestrator opens an `[<change>] archive the change` issue (`agent:auto`). The worker that takes it runs `openspec archive <id> --yes`, which merges the change's spec deltas into `openspec/specs/`, so the next change builds on an up-to-date spec.
+| You want to… | Read |
+|---|---|
+| Add the kit to your own project, with no cloning of this repo: `npx -y github:KKogaa/hackathon-sdlc-kit` | [docs/setup/repo.md](docs/setup/repo.md) |
+| Set up your machine, by profile (every machine, repo owner, conductor, worker), and see the 6-machine layout | **[docs/setup/](docs/setup/README.md)** |
+| Know what to do during the day: kickoff, build loop, final 2 hours | [docs/playbook.md](docs/playbook.md) |
+| Add a feature, file a bug, reprioritize or cancel mid-hackathon | [docs/changing-the-plan.md](docs/changing-the-plan.md) |
 
 ---
 
@@ -285,63 +199,106 @@ Copilot reads skill descriptions and loads the right one automatically, and the 
 |-------|-------|---------|
 | `kickoff` | Plan | `/kickoff` |
 | `plan-feature` | Plan | `/plan` |
-| `implement-issue` | Build | worker: `implement`, `resume` |
+| `implement-issue` | Build | specialists: `implement` |
+| `role-frontend` (design included), `role-backend` | Build | the matching specialist, and `reviewer` for lane standards |
+| `fix-pr` | Build | specialists: `fix` |
+| `check` | Test (the CI) | `implement-issue`, `open-pr`, `review-pr` |
 | `write-tests` | Test | `implement-issue` |
 | `open-pr` | Ship | `implement-issue` |
-| `review-pr` | Review | worker: `review` |
+| `review-pr` | Review | `reviewer` |
 | `standup` | Track | `/standup` |
 | `ship-release` | Release | "Cut the demo release" |
 | `demo-prep` | Demo | `/demo` |
+| `frontend-design` | Design | `role-frontend`. Anthropic's skill, **not shipped**: each teammate installs it in [setup](docs/setup/windows-base.md#4-install-the-design-skill) |
 | `openspec-*` | Spec | the skills above, and `/opsx-*` |
+
+### Prompts (VS Code slash commands)
+
+| Prompt (VS Code) | Who | What it does |
+|------------------|-----|--------------|
+| `/work <lane>` | everyone | The worker loop |
+| `/orchestrate` | conductor (once) | The orchestrator loop, if not using Copilot CLI |
+| `/kickoff <idea>` | conductor | Idea → OpenSpec brief and changes → spec PR |
+| `/plan <feature>` | conductor | New feature → OpenSpec change → spec PR, in VS Code. Or just ask the orchestrator |
+| `/decide` | conductor | Walk through the questions workers parked |
+| `/standup` | anyone | Team status to paste in the chat |
+| `/demo` | conductor | Submission and demo prep |
+| `/opsx-*` | anyone | OpenSpec's own commands (propose, apply, archive, explore…) |
+
+Prompt files are a VS Code feature. In Copilot CLI, pick the agent with `/agent conductor` (or `copilot --agent conductor`) and ask in plain words, for example *"use the kickoff skill: we're building …"*.
 
 ### Labels
 
 | Group | Labels | Set by |
 |-------|--------|--------|
 | status | `status:ready` `status:in-progress` `status:blocked` `status:needs-decision` | orchestrator, workers, `/decide` |
-| pr | `pr:needs-review` `pr:reviewing` `pr:changes` | `open-pr`, orchestrator, `review-pr` |
-| area (lane) | `area:frontend` `area:backend` `area:ai` `area:infra` | `tasks.md` metadata |
+| pr | `pr:needs-review` `pr:reviewing` `pr:changes` (sent back, once) `pr:needs-human` (the reviewer couldn't make it green) | `open-pr`, orchestrator, `review-pr` |
+| area (lane) | `area:frontend` (design included) `area:backend` | `tasks.md` metadata |
 | size | `size:S` (<1h) `size:M` (1–2h) `size:L` (split it) | `tasks.md` metadata |
 | priority | `priority:p0` (demo path) `priority:p1` `priority:p2` | `tasks.md` metadata |
-| type | `type:feature` `type:bug` `type:chore` `type:docs` | `tasks.md` metadata, issue templates |
+| type | `type:feature` `type:bug` `type:chore` `type:docs` `type:feature-request` | `tasks.md` metadata, issue templates (feature requests wait for the conductor) |
 | agent | `agent:auto`: an unattended worker can finish it | `tasks.md` metadata |
 
 ### The orchestrator
 
-```bash
-node scripts/orchestrate.mjs status                        # the board (read-only)
-node scripts/orchestrate.mjs next --lane frontend          # claim my next unit (JSON on stdout)
-node scripts/orchestrate.mjs next --lane ai --wait 10      # …waiting up to 10 min for work
-node scripts/orchestrate.mjs reviewed 15 --merge           # after a review: merge (or --changes)
+```
+# anyone
+node scripts/orchestrate.mjs status                        # board, workers and assignments (read-only)
 node scripts/orchestrate.mjs sync --dry-run                # preview the issues a spec would create
-node scripts/orchestrate.mjs housekeeping                  # sync + unblock + archive
+
+# orchestrator (exactly one)
+node scripts/orchestrate.mjs setup                         # labels + worker registry issue (once, safe to repeat)
+node scripts/orchestrate.mjs tick --watch 10               # assign work every 30s for 10 min, then report
+node scripts/orchestrate.mjs take scaffold                 # assign a change's open issues to me
+
+# worker (any number)
+node scripts/orchestrate.mjs work --lane frontend --wait 10 # heartbeat + my unit and its role as JSON (waits up to 10 min)
+node scripts/orchestrate.mjs done                          # I finished my unit
+node scripts/orchestrate.mjs reviewed 15 --merge --body-file r.md  # approve + merge (or --changes: once per PR)
+node scripts/orchestrate.mjs worktree w2                   # a folder for another worker on this machine
 ```
 
 ### Checks (the CI)
 
-`bash scripts/check.sh` detects the stack and runs what applies: `openspec validate --all --strict`, then Node and/or Python lint, test and build. The author runs it before opening a PR, and the reviewer runs it again on the PR merged with `main` before merging.
+The `check` skill runs `openspec validate --all --strict`, then the Install, Lint, Test and Build commands from the **Commands** table in `AGENTS.md`. `scaffold` fills those in. The author runs it before opening a PR, and the reviewer runs it again on the PR merged with `main` before merging. Both run the same commands because both read them from the same table.
 
 ### What's in the repo
 
 | Path | Purpose |
 |------|---------|
+| `docs/setup/` | Setup, one page per machine profile: every machine, repo owner, conductor, worker |
+| `docs/playbook.md`, `docs/changing-the-plan.md` | Running the day, and changing scope mid-event |
 | `openspec/config.yaml` | Project brief, plus the rules that make agents write issue-ready tasks |
 | `openspec/changes/`, `openspec/specs/` | Planned changes, and the merged spec of the system |
-| `.github/agents/` | `worker` and `conductor` custom agents (VS Code and Copilot CLI) |
-| `.github/prompts/` | `/work`, `/kickoff`, `/plan`, `/decide`, `/standup`, `/demo`, `/opsx-*` |
+| `.github/agents/` | Custom agents (VS Code and Copilot CLI): `orchestrator` (exactly one), `worker` (any number), the specialists `frontend` (design included), `backend` and `reviewer`, and `conductor` |
+| `.github/prompts/` | `/work`, `/orchestrate`, `/kickoff`, `/plan`, `/decide`, `/standup`, `/demo`, `/opsx-*` |
 | `.github/skills/*/SKILL.md` | Agent Skills: the SDLC workflows |
 | `.github/copilot-instructions.md`, `AGENTS.md` | Always-on rules and the team workflow |
 | `.vscode/settings.json` | Agent skills on, high request limit, terminal auto-approve for routine commands |
-| `scripts/orchestrate.mjs` | The coordinator: sync, claim, unblock, review bookkeeping, archive |
-| `scripts/check.sh` | Local CI |
-| `scripts/worker.sh` | Copilot CLI autopilot worker |
-| `scripts/setup-labels.sh` | Creates the labels |
+| `scripts/orchestrate.mjs` | The coordinator (Node, no dependencies): labels, worker registry, sync, assignment, unblock, archive, worktrees. The only script in the kit |
 | `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | Bug/task templates and the PR checklist |
+| `bin/create.mjs`, `package.json` | The `npx` installer. Not copied by it. If you used the template, `scaffold` can delete them or replace `package.json` with the project's own |
+
+### Compatibility
+
+At the hackathon **every teammate is on Windows**. That is the only platform the kit has to work on. Linux is only where the kit itself is developed.
+
+| Windows, any shell (PowerShell, CMD, Git Bash) | |
+|---|---|
+| **VS Code Copilot Chat** (`/work`, prompts, custom agents, skills): the default | ✅ |
+| **Copilot CLI** (`--agent orchestrator`, `--agent worker`): preferred for the orchestrator | ✅ needs PowerShell 7 |
+
+Rules for changing the kit:
+- **No bash scripts.** Automation is a skill, which the agent runs, or Node with no dependencies, like `scripts/orchestrate.mjs`. In Node, never spawn POSIX-only binaries such as `sleep` or `which`, and build paths with `node:path`.
+- **Commands in skills and agents must run in PowerShell 5.1, PowerShell 7, CMD and Git Bash.** That means one plain command per line: no `&&` or `;` chains, no `\` line continuations, no pipes, redirects or `$(...)`. Always quote `"@me"` (and `"repos/{owner}/{repo}"`). Write files with the agent's file tool, not with shell redirects.
+- An agent feature must work in **both** VS Code and Copilot CLI. If something exists in only one, such as prompt files, which the CLI doesn't have, document the fallback for the other.
+- Files stay **LF** (`.gitattributes`, `files.eol`).
+- Passing on Linux proves nothing about Windows. If a change wasn't tried on Windows, say so in the PR.
 
 ## Rules that keep it fast
 
 1. **Contracts first.** Frontend and backend build against the `## Contracts` in each change's `design.md`, not against each other.
 2. **One task group = one issue = one PR**, under 400 lines, squash-merged.
-3. **Let the orchestrator claim.** It's what stops 6 workers from colliding.
+3. **Only the orchestrator assigns work.** Single-writer assignment is what lets you add workers without collisions.
 4. **Finish before starting**: fix your PRs, then review, then build.
-5. **Never break main.** `check.sh` failing on main is p0 for everyone.
+5. **Never break main.** The checks failing on main is p0 for everyone.
