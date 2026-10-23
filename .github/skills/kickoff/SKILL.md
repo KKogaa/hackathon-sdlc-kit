@@ -13,6 +13,21 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    - The problem and who has it (1 sentence each)
    - The demo moment: what the judges must see working
    - Hard constraints: the stack the team knows, required APIs or sponsor tech, the deadline
+   - How it's judged, if they know: criteria, categories, sponsor prizes
+
+1b. **Must-haves, then opportunities.** Don't just transcribe the idea: look for what would make it win. Send ONE message with two parts, then wait for the answer. This is the only stop before the spec PR.
+   - **Must-haves.** The smallest set of user actions that makes the demo script work end to end. These become the p0 slices. List them in one line each, so the user can confirm or cut.
+   - **Opportunities.** 4–8 ideas the user didn't ask for, numbered. Be creative, and make at least one of them ambitious. Look at them from different angles:
+     - the demo's *wow* moment: something live, visual or surprising the judges remember
+     - the judging criteria and sponsor prizes: using the sponsor's tech in a way that isn't obvious
+     - the user's real workflow around the product: what they do just before and just after (share, import, export, notify, collaborate)
+     - a twist that makes it different from the obvious version of this idea
+     - polish that makes it feel real: onboarding, seed data, empty states, mobile
+   - For each opportunity give: a one-line pitch, why judges or users care, the cost (about how many task groups, and which lanes), the risk (new API, secrets, unknown tech), and your recommendation (**include**, **maybe** or **skip**). End with the question, for example *"Reply with the numbers to include, e.g. `1, 3, 5`, and any must-have to cut or change."*
+   - Then, from the answer:
+     - each approved opportunity becomes its own change (or a group inside a must-have change, if it's tiny), with `priority=p1` or `p2`. Must-have groups never depend on an opportunity, so any of them can be cut mid-event without breaking the demo.
+     - the ideas not taken go in the brief's **Later** list, where `/plan` can pick them up if the team gets ahead.
+   - Size it to the team: about 6 workers × the hours until the feature freeze. Must-haves should fit comfortably in roughly the first half of that. If the approved list doesn't fit, say so and suggest what to drop.
 
 2. **Check the tools**: `openspec --version`, or install it with `npm install -g @fission-ai/openspec@1.14.3`, and `gh auth status`. Create the labels with `node scripts/orchestrate.mjs setup` (safe to re-run). Create the milestone:
    ```
@@ -26,14 +41,14 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
    git checkout -b kickoff-spec
    ```
 
-4. **Fill the project brief.** Replace every `<...>` in the `context:` block of `openspec/config.yaml`: problem, demo script (3–5 steps), MVP scope in/out, tech stack with one-line reasons, architecture, lanes. Keep the `rules:` block as it is: it is what makes every agent write issue-ready tasks.
+4. **Fill the project brief.** Replace every `<...>` in the `context:` block of `openspec/config.yaml`: problem, demo script (3–5 steps), MVP scope (In: the must-haves, Stretch: the approved opportunities, Later, Out), tech stack with one-line reasons, architecture, lanes. Keep the `rules:` block as it is: it is what makes every agent write issue-ready tasks.
 
 4b. **Respect what the project already has.** The kit is often added to a repo the team created by hand, sometimes already with a framework (for example from `create-next-app`, `vite` or `fastapi`). Look at the repo first (`package.json`, `pyproject.toml`, existing folders). If a stack is already there:
    - take it as decided, and put it in the brief's tech stack
    - fill the **Commands** table in `AGENTS.md` from it right away (Install, Dev, Lint, Test, Build), using commands that work in PowerShell
    - shrink `scaffold` to what's missing (for example tests, lint, or a deploy), instead of creating a new skeleton
 
-5. **Split the MVP into changes.** List 4–8 vertical slices (one user action each: UI + API + data), plus a `scaffold` change. For each one, create a full change with the `openspec-propose` skill (`/opsx-propose` in VS Code): proposal, spec deltas, design and tasks. You are authorized to create all of them in this session without stopping between changes. Requirements:
+5. **Split the MVP into changes.** List 4–8 vertical slices for the must-haves (one user action each: UI + API + data), one change per approved opportunity, plus a `scaffold` change. For each one, create a full change with the `openspec-propose` skill (`/opsx-propose` in VS Code): proposal, spec deltas, design and tasks. You are authorized to create all of them in this session without stopping between changes. Requirements:
    - **`scaffold` comes first**: repo skeleton, stack installed, the Install/Lint/Test/Build rows of the **Commands** table in `AGENTS.md` filled in (the `check` skill runs them), hello-world deployed. Its groups are `priority=p0`, with no `agent=auto` and with `assignee=<conductor's GitHub login>` (get it from `gh api user --jq .login`), because the conductor drives it interactively. Every group of every other change depends on its last group, for example `depends=scaffold:2`.
    - **Contracts are the critical path.** Each `design.md` starts with a `## Contracts` section giving exact API shapes. Make contracts between changes agree, for example the frontend change uses the same response shape the backend change defines.
    - **Every task group** in `tasks.md` has the `<!-- issue: ... -->` metadata line described in the `rules:` in `openspec/config.yaml`. Aim for 10–25 groups in total, about half of them `agent=auto`, spread across the 2 lanes (`frontend`, which owns design too, and `backend`), so every worker has work in the first wave. The first frontend group builds the design system (tokens, components, page shell), and the screens depend on it.
@@ -46,10 +61,10 @@ Goal: within ~30 minutes, the orchestrator can keep every worker agent busy with
 
 9. **After it merges**, start the orchestrator: one Copilot CLI session, with `copilot --agent orchestrator` (see README). Its first tick creates every issue and links the dependencies. The `scaffold` groups carry `assignee=<conductor login>`, so they're created already assigned to the conductor and no worker gets them. Then tell the team to start their workers: `/work <lane>` in VS Code. They review scaffold PRs and otherwise wait until scaffold merges and the board unblocks.
 
-10. **Print the plan**: a table of change, group, lane, size, owner (interactive, or `agent:auto` for any worker) and dependencies, plus who takes `scaffold`.
+10. **Print the plan**: a table of change, group, lane, size, priority (must-have p0, or opportunity p1/p2), owner (interactive, or `agent:auto` for any worker) and dependencies, plus who takes `scaffold`.
 
 ## Output
 
-- `openspec/config.yaml` with the brief, and one change per MVP slice, validated, in a merged spec PR
+- `openspec/config.yaml` with the brief (must-haves, approved opportunities, Later list), and one change per slice and per approved opportunity, validated, in a merged spec PR
 - Labels, the MVP milestone, and the issue backlog (created by `orchestrate.mjs sync` after the merge)
 - A first-wave assignment plan for the 6 lanes

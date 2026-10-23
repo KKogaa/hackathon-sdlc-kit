@@ -19,7 +19,9 @@ context: |
     3. <step>
 
   MVP scope
-    In:  <...>
+    In (must-haves, p0): <...>
+    Stretch (approved opportunities, p1/p2, cut first): <...>
+    Later (ideas not taken, for /plan if we get ahead): <...>
     Out (explicitly): <...>
 
   Tech stack: <layer: choice (why)>, ...

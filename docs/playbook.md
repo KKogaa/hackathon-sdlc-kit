@@ -22,9 +22,9 @@ timeline
 1. The conductor runs, in VS Code Copilot Chat:
    > `/kickoff an AI study buddy for Spanish learners`
 
-   The agent asks for anything it's missing in one message, then:
+   The agent asks for anything it's missing in one message. Then it proposes the **must-haves** (what the demo needs end to end) and a numbered list of **opportunities** it found (a wow moment, sponsor tech, a twist, polish), each with its cost, risk and a recommendation. Reply with the numbers to include. Then it:
    - fills the project brief in `openspec/config.yaml`
-   - creates a `scaffold` change, reserved for the conductor with `assignee=`, plus 4–8 vertical-slice changes, each with a **Contracts** section in `design.md`
+   - creates a `scaffold` change, reserved for the conductor with `assignee=`, plus 4–8 vertical-slice changes for the must-haves and one per approved opportunity (p1/p2, so they can be cut without breaking the demo), each with a **Contracts** section in `design.md`
    - runs `openspec validate --all --strict` and previews the backlog with `node scripts/orchestrate.mjs sync --dry-run`
    - opens the spec PR `docs(spec): MVP spec and contracts`
 2. **The whole team reviews the spec PR together**, mostly the `## Contracts` sections. This is the most important review of the day, because every worker will build against these shapes in parallel.
